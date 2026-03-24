@@ -1,0 +1,1883 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Il Grimorio del DM — D&D 5e</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root {
+  --parchment:#f5edd6; --parchment-mid:#e8d5a3; --parchment-dark:#c9a96e;
+  --ink:#1c0f00; --blood:#7a0000; --blood-glow:#cc0000;
+  --gold:#c9a84c; --gold-light:#f0d060; --ember:#e85d04;
+  --stone:#0f0a04; --stone-mid:#1e1408; --stone-light:#2e2010;
+  --card-border:rgba(201,168,76,0.25);
+  --api-blue:rgba(30,80,160,.35); --api-blue-border:rgba(30,80,160,.5); --api-blue-text:#88aaff;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--stone);color:var(--parchment);font-family:'IM Fell English',Georgia,serif;min-height:100vh;overflow-x:hidden;}
+
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 70% 50% at 15% 90%,rgba(139,0,0,0.1) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 60% at 85% 10%,rgba(201,168,76,0.06) 0%,transparent 60%),
+             radial-gradient(ellipse 100% 100% at 50% 50%,rgba(20,12,4,1) 0%,#050200 100%);}
+
+/* FLAMES */
+.flames{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.flame{position:absolute;bottom:-10px;border-radius:50% 50% 20% 20%;opacity:0;filter:blur(1.5px);animation:riseFlame linear infinite;}
+@keyframes riseFlame{0%{opacity:0;transform:translateY(0) scaleX(1);}20%{opacity:0.6;}80%{opacity:0.2;}100%{opacity:0;transform:translateY(-280px) scaleX(0.2) translateX(20px);}}
+
+/* HEADER */
+header{position:relative;z-index:10;text-align:center;padding:2rem 1rem 1rem;
+  border-bottom:2px solid var(--gold);background:linear-gradient(to bottom,rgba(0,0,0,0.9),transparent);
+  box-shadow:0 4px 30px rgba(201,168,76,0.12);}
+h1{font-family:'Cinzel Decorative',serif;font-size:clamp(1.3rem,3.5vw,2.4rem);color:var(--gold-light);
+  text-shadow:0 0 30px rgba(201,168,76,0.4),0 2px 4px rgba(0,0,0,0.9);letter-spacing:.04em;}
+.subtitle{font-family:'Cinzel',serif;font-size:.75rem;color:var(--parchment-dark);letter-spacing:.2em;margin-top:.3rem;opacity:.6;}
+
+/* MOBILE NAV */
+.mobile-nav{display:none;position:relative;z-index:10;background:rgba(0,0,0,.85);border-bottom:1px solid var(--card-border);padding:.5rem .4rem;gap:.3rem;justify-content:center;flex-wrap:wrap;}
+.mobile-nav button{padding:.55rem 1rem;min-height:44px;background:transparent;border:1px solid var(--card-border);border-radius:3px;color:var(--parchment-dark);font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.08em;cursor:pointer;transition:all .2s;touch-action:manipulation;}
+.mobile-nav button.active{background:var(--gold);color:var(--stone);border-color:var(--gold);font-weight:700;}
+
+/* LAYOUT */
+.app{position:relative;z-index:5;display:grid;grid-template-columns:320px 1fr 310px;min-height:calc(100vh - 110px);}
+
+/* PANELS */
+.panel{border-right:1px solid var(--card-border);overflow-y:auto;max-height:calc(100vh - 110px);}
+.panel-inner{padding:1.2rem;}
+.panel:last-child{border-right:none;}
+.panel-title{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.25em;text-transform:uppercase;
+  color:var(--gold);opacity:.8;margin-bottom:.8rem;padding-bottom:.4rem;border-bottom:1px solid var(--card-border);
+  display:flex;align-items:center;gap:.4rem;}
+.panel-title::before{content:'◆';font-size:.55rem;}
+
+/* SEARCH */
+.search-wrap{position:relative;margin-bottom:.8rem; display:flex; gap:0.4rem;}
+.search-wrap .input-box {position:relative; flex:1;}
+.search-wrap input{width:100%;padding:.55rem .8rem .55rem 2rem;background:rgba(255,255,255,.04);
+  border:1px solid var(--card-border);border-radius:3px;color:var(--parchment);
+  font-family:'IM Fell English',serif;font-size:.85rem;outline:none;transition:border-color .2s;}
+.search-wrap input:focus{border-color:var(--gold);}
+.search-wrap input::placeholder{color:rgba(245,237,214,.25);}
+.si{position:absolute;left:.6rem;top:50%;transform:translateY(-50%);font-size:.75rem;opacity:.35;}
+
+/* SOURCE TOGGLE */
+.source-toggle{display:flex;margin-bottom:.6rem;border:1px solid var(--card-border);border-radius:3px;overflow:hidden;}
+.source-toggle button{flex:1;padding:.35rem .5rem;background:transparent;border:none;color:var(--parchment-dark);font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.08em;cursor:pointer;transition:all .2s;}
+.source-toggle button.active{background:var(--gold);color:var(--stone);font-weight:700;}
+.source-toggle button:first-child{border-right:1px solid var(--card-border);}
+
+/* FILTER TABS */
+.filter-tabs{display:flex;flex-wrap:wrap;gap:.25rem;margin-bottom:.8rem;}
+.tab{padding:.2rem .55rem;background:transparent;border:1px solid rgba(201,168,76,.2);border-radius:2px;
+  color:var(--parchment-dark);font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.08em;cursor:pointer;transition:all .2s;}
+.tab:hover{border-color:var(--gold);color:var(--gold);}
+.tab.active{background:var(--gold);color:var(--stone);border-color:var(--gold);font-weight:700;}
+
+/* CR FILTER */
+.cr-filter{display:flex;gap:.3rem;margin-bottom:.6rem;align-items:center;flex-wrap:wrap;}
+.cr-filter label{font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.1em;color:var(--gold);opacity:.6;}
+.cr-filter select{padding:.25rem .4rem;background:rgba(255,255,255,.04);border:1px solid var(--card-border);border-radius:3px;color:var(--parchment);font-family:'IM Fell English',serif;font-size:.75rem;outline:none;cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23c9a84c' opacity='.4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .4rem center;padding-right:1.2rem;}
+.cr-filter select option{background:#0f0a04;}
+
+/* CREATURE LIST */
+.creature-list{display:flex;flex-direction:column;gap:.3rem;}
+.creature-item{display:flex;align-items:center;gap:.6rem;padding:.45rem .6rem;
+  background:rgba(255,255,255,.025);border:1px solid transparent;border-radius:3px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden;}
+.creature-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(to right,rgba(201,168,76,.12),transparent);transition:width .2s;}
+.creature-item:hover::before{width:100%;}
+.creature-item:hover{border-color:rgba(201,168,76,.25);}
+.creature-item.selected{border-color:var(--gold);background:rgba(201,168,76,.08);}
+.creature-item.external .cr-badge {background:var(--api-blue); border-color:var(--api-blue-border); color:var(--api-blue-text);}
+
+/* LOAD MORE */
+.load-more-wrap{text-align:center;padding:.8rem 0;}
+.load-more-btn{padding:.4rem 1.2rem;background:rgba(30,80,160,.15);border:1px solid var(--api-blue-border);border-radius:3px;color:var(--api-blue-text);font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.08em;cursor:pointer;transition:all .2s;}
+.load-more-btn:hover{background:rgba(30,80,160,.3);border-color:#88aaff;}
+.load-more-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* LOADING INDICATOR */
+.list-loading{text-align:center;padding:1.2rem;color:var(--gold);font-size:.7rem;letter-spacing:.1em;font-family:'Cinzel',serif;}
+.list-loading .dots::after{content:'';animation:dots 1.5s infinite;}
+@keyframes dots{0%{content:'';}25%{content:'.';}50%{content:'..';}75%{content:'...';}100%{content:'';}}
+
+/* RESULT COUNT */
+.result-count{font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.1em;color:var(--parchment-dark);opacity:.5;margin-bottom:.4rem;text-align:center;}
+
+/* SVG FAVICON AVATAR */
+.creature-avatar{width:36px;height:36px;border-radius:4px;border:1px solid rgba(201,168,76,.3);
+  flex-shrink:0;background:var(--stone-mid);overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.creature-avatar svg{width:30px;height:30px;}
+.creature-avatar img{width:36px;height:36px;object-fit:cover;border-radius:3px;}
+
+.creature-info{flex:1;min-width:0;}
+.creature-name{font-family:'Cinzel',serif;font-size:.78rem;color:var(--parchment);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.creature-meta{font-size:.62rem;color:var(--parchment-dark);opacity:.55;margin-top:.1rem;text-transform:capitalize;}
+.cr-badge{padding:.08rem .3rem;background:rgba(122,0,0,.35);border:1px solid rgba(122,0,0,.5);
+  border-radius:2px;font-size:.6rem;color:#ff7070;font-family:'Cinzel',serif;flex-shrink:0;}
+
+/* BUILDER CENTER */
+.builder-panel{border-right:1px solid var(--card-border);padding:1.2rem;overflow-y:auto;max-height:calc(100vh - 110px);}
+
+/* AI IMAGE AREA */
+.ai-image-area{margin-bottom:1.2rem;}
+.ai-portrait-frame{width:100%;aspect-ratio:3/4;max-height:420px;border:2px solid var(--gold);border-radius:6px;
+  background:var(--stone-mid);position:relative;overflow:hidden;
+  box-shadow:0 0 25px rgba(201,168,76,.15),inset 0 0 30px rgba(0,0,0,.6);}
+.ai-portrait-frame::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(201,168,76,.25) 0%,transparent 40%,transparent 60%,rgba(201,168,76,.1) 100%);
+  pointer-events:none;z-index:2;}
+.ai-portrait-frame img{width:100%;height:100%;object-fit:cover;object-position:center top;display:none;}
+.ai-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.8rem;}
+.ai-placeholder svg{width:80px;height:80px;opacity:.25;}
+.ai-placeholder-text{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.15em;color:var(--parchment-dark);opacity:.4;text-align:center;padding:0 1rem;}
+
+/* AI PROMPT */
+.ai-prompt-wrap{margin-top:.7rem;}
+.prompt-label{font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.18em;color:var(--gold);opacity:.7;margin-bottom:.35rem;text-transform:uppercase;}
+.prompt-row{display:flex;gap:.5rem;}
+.prompt-row textarea{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--card-border);
+  border-radius:3px;color:var(--parchment);font-family:'IM Fell English',serif;font-size:.8rem;
+  padding:.5rem;resize:none;outline:none;height:70px;transition:border-color .2s;}
+.prompt-row textarea:focus{border-color:rgba(201,168,76,.5);}
+.generate-btn{padding:.5rem .8rem;min-height:44px;background:linear-gradient(135deg,#5a0000,#900000);border:1px solid rgba(201,168,76,.4);
+  border-radius:3px;color:var(--gold-light);font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.1em;
+  cursor:pointer;transition:all .25s;white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:.3rem;touch-action:manipulation;}
+.generate-btn:hover{background:linear-gradient(135deg,#7a0000,#b00000);box-shadow:0 0 15px rgba(200,0,0,.3);}
+.generate-btn:disabled{opacity:.4;cursor:not-allowed;}
+.gen-spinner{display:none;width:16px;height:16px;border:2px solid rgba(201,168,76,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.style-chips{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.4rem;}
+.style-chip{padding:.15rem .4rem;background:rgba(255,255,255,.04);border:1px solid rgba(201,168,76,.2);
+  border-radius:2px;font-size:.6rem;color:var(--parchment-dark);cursor:pointer;transition:all .15s;font-family:'Cinzel',serif;}
+.style-chip:hover{border-color:var(--gold);color:var(--gold);}
+.style-chip.on{background:rgba(201,168,76,.15);border-color:var(--gold);color:var(--gold-light);}
+
+/* MODEL SELECTOR */
+.model-row{display:flex;gap:.4rem;margin-top:.4rem;align-items:center;flex-wrap:wrap;}
+.model-row label{font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.1em;color:var(--gold);opacity:.5;}
+.model-chip{padding:.12rem .4rem;background:rgba(255,255,255,.03);border:1px solid rgba(201,168,76,.15);
+  border-radius:2px;font-size:.55rem;color:var(--parchment-dark);cursor:pointer;transition:all .15s;font-family:'Cinzel',serif;}
+.model-chip:hover{border-color:var(--gold);color:var(--gold);}
+.model-chip.on{background:rgba(122,0,0,.25);border-color:rgba(122,0,0,.5);color:#ff8888;}
+
+/* GEMINI KEY INPUT */
+.gemini-key-row{display:flex;gap:.3rem;margin-top:.45rem;align-items:center;flex-wrap:wrap;}
+.gemini-key-row label{font-family:'Cinzel',serif;font-size:.52rem;letter-spacing:.1em;color:#88aaff;opacity:.7;white-space:nowrap;cursor:pointer;}
+.gemini-key-row input{flex:1;min-width:0;background:rgba(136,170,255,.05);border:1px solid rgba(136,170,255,.2);
+  border-radius:2px;padding:.2rem .4rem;color:#aabfff;font-size:.58rem;font-family:monospace;outline:none;}
+.gemini-key-row input:focus{border-color:#88aaff;}
+.gemini-key-row input::placeholder{color:rgba(136,170,255,.3);}
+.gemini-key-save{padding:.18rem .45rem;font-family:'Cinzel',serif;font-size:.52rem;background:rgba(136,170,255,.1);
+  border:1px solid rgba(136,170,255,.3);border-radius:2px;color:#88aaff;cursor:pointer;}
+.gemini-key-save:hover{background:rgba(136,170,255,.2);}
+
+/* IMAGE HISTORY */
+.img-history{display:flex;gap:.3rem;margin-top:.5rem;flex-wrap:wrap;}
+.img-history-thumb{width:40px;height:40px;border-radius:3px;border:1px solid rgba(201,168,76,.2);cursor:pointer;object-fit:cover;transition:all .15s;opacity:.6;}
+.img-history-thumb:hover{opacity:1;border-color:var(--gold);transform:scale(1.1);}
+.img-history-thumb.active{opacity:1;border-color:var(--gold);box-shadow:0 0 8px rgba(201,168,76,.4);}
+
+/* NAME INPUT */
+.enemy-name-input{margin-bottom:.9rem;}
+.enemy-name-input input{width:100%;background:transparent;border:none;border-bottom:2px solid rgba(201,168,76,.35);
+  color:var(--gold-light);font-family:'Cinzel Decorative',serif;font-size:1.3rem;text-align:center;
+  outline:none;padding:.25rem;transition:border-color .2s;}
+.enemy-name-input input:focus{border-color:var(--gold);}
+.enemy-name-input input::placeholder{color:rgba(201,168,76,.2);}
+
+/* SECTION LABEL */
+.slbl{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.22em;color:var(--gold);opacity:.6;
+  margin-bottom:.4rem;text-transform:uppercase;}
+
+/* SELECT GRID */
+.select-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.8rem;}
+.sw label{display:block;font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.12em;color:var(--parchment-dark);opacity:.55;margin-bottom:.2rem;}
+.sw select{width:100%;padding:.45rem .5rem;background:rgba(255,255,255,.04);border:1px solid var(--card-border);
+  border-radius:3px;color:var(--parchment);font-family:'IM Fell English',serif;font-size:.82rem;outline:none;cursor:pointer;
+  transition:border-color .2s;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23c9a84c' opacity='.4'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right .5rem center;}
+.sw select:focus{border-color:var(--gold);}
+.sw select option{background:#0f0a04;}
+
+/* ABILITY SCORES */
+.ability-scores{display:grid;grid-template-columns:repeat(6,1fr);gap:.4rem;margin-bottom:.8rem;}
+.ability-score{text-align:center;background:rgba(255,255,255,.03);border:1px solid rgba(201,168,76,.18);border-radius:3px;padding:.35rem .1rem;}
+.ab-name{font-family:'Cinzel',serif;font-size:.5rem;letter-spacing:.1em;color:var(--gold);opacity:.7;}
+.ability-score input{display:block;width:100%;background:transparent;border:none;color:var(--parchment);
+  font-family:'Cinzel',serif;font-size:.95rem;font-weight:700;text-align:center;outline:none;padding:.15rem 0;}
+.ability-score input::-webkit-inner-spin-button{-webkit-appearance:none;}
+.ab-mod{font-size:.6rem;color:var(--parchment-dark);opacity:.45;}
+
+/* COMBAT STATS */
+.combat-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.8rem;}
+.combat-stat{background:rgba(122,0,0,.1);border:1px solid rgba(122,0,0,.3);border-radius:3px;padding:.45rem;text-align:center;}
+.combat-stat.ac{background:rgba(201,168,76,.06);border-color:rgba(201,168,76,.22);}
+.combat-stat.speed{background:rgba(30,80,160,.06);border-color:rgba(30,80,160,.22);}
+.cs-label{font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.08em;opacity:.55;margin-bottom:.15rem;}
+.cs-value{display:flex;align-items:center;justify-content:center;gap:.15rem;}
+.cs-value input{width:45px;background:transparent;border:none;color:var(--parchment);font-family:'Cinzel',serif;font-size:1rem;font-weight:700;text-align:center;outline:none;}
+.cs-value input::-webkit-inner-spin-button{-webkit-appearance:none;}
+.cs-dice{font-size:.65rem;color:var(--parchment-dark);opacity:.35;}
+
+/* COLOR PICKERS */
+.color-row{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.6rem;}
+.color-swatch{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .18s;}
+.color-swatch.selected{border-color:var(--gold);box-shadow:0 0 7px rgba(201,168,76,.5);transform:scale(1.2);}
+
+/* TAGS */
+.tag-cloud{display:flex;flex-wrap:wrap;gap:.28rem;margin-bottom:.5rem;}
+.tag{padding:.15rem .45rem;background:rgba(122,0,0,.2);border:1px solid rgba(122,0,0,.4);border-radius:20px;
+  font-size:.6rem;color:#ff8888;font-family:'Cinzel',serif;cursor:pointer;transition:all .18s;}
+.tag:hover{background:rgba(122,0,0,.4);}
+.tag.active{background:var(--blood);border-color:#ff4444;color:#fff;}
+.tag.cond{background:rgba(30,80,160,.2);border-color:rgba(30,80,160,.4);color:#88aaff;}
+.tag.cond.active{background:rgba(30,80,160,.5);color:#fff;}
+
+/* TRAITS */
+.traits-area{margin-bottom:.8rem;}
+.trait-item{background:rgba(255,255,255,.02);border:1px solid rgba(201,168,76,.1);border-radius:3px;padding:.5rem;margin-bottom:.35rem;}
+.trait-name{font-family:'Cinzel',serif;font-size:.72rem;color:var(--gold);margin-bottom:.1rem;}
+.trait-desc{font-size:.72rem;color:var(--parchment-dark);opacity:.65;line-height:1.4;}
+
+/* NOTES */
+.notes-area textarea{width:100%;min-height:120px;background:rgba(255,255,255,.03);border:1px solid var(--card-border);
+  border-radius:3px;color:var(--parchment);font-family:'IM Fell English',serif;font-size:.78rem;
+  padding:.45rem;resize:vertical;outline:none;transition:border-color .2s;}
+.notes-area textarea:focus{border-color:rgba(201,168,76,.4);}
+
+/* PRESENT BUTTON */
+.present-btn{width:100%;padding:.9rem;background:linear-gradient(135deg,#6a0000,#a00000);
+  border:2px solid rgba(201,168,76,.45);border-radius:4px;color:var(--gold-light);
+  font-family:'Cinzel Decorative',serif;font-size:.85rem;letter-spacing:.1em;cursor:pointer;
+  transition:all .3s;margin-top:.8rem;box-shadow:0 4px 20px rgba(122,0,0,.35);position:relative;overflow:hidden;}
+.present-btn::before{content:'';position:absolute;top:-50%;left:-60%;width:35%;height:200%;
+  background:linear-gradient(to right,transparent,rgba(255,255,255,.08),transparent);transform:skewX(-20deg);transition:left .5s;}
+.present-btn:hover::before{left:130%;}
+.present-btn:hover{background:linear-gradient(135deg,#8b0000,#c00000);box-shadow:0 4px 30px rgba(200,0,0,.45),0 0 20px rgba(201,168,76,.15);transform:translateY(-1px);}
+
+/* STAT BLOCK */
+.stat-block{background:var(--parchment);color:var(--ink);border:2px solid var(--parchment-dark);border-radius:4px;
+  font-family:'IM Fell English',Georgia,serif;box-shadow:4px 4px 20px rgba(0,0,0,.7),inset 0 0 40px rgba(0,0,0,.04);}
+.sb-header{background:linear-gradient(to bottom,#8b0000,#6b0000);color:var(--parchment);padding:.7rem .9rem;}
+.sb-name{font-family:'Cinzel',serif;font-size:1.1rem;font-weight:700;text-shadow:1px 1px 2px rgba(0,0,0,.5);}
+.sb-type{font-style:italic;font-size:.78rem;opacity:.8;margin-top:.08rem;}
+.sb-divider{height:3px;background:linear-gradient(to right,#8b0000,#c0392b,#8b0000);margin:.4rem 0;}
+.sb-divider.thin{height:1px;background:rgba(139,0,0,.35);}
+.sb-body{padding:.7rem .9rem;}
+.sb-row{font-size:.78rem;margin-bottom:.25rem;line-height:1.4;}
+.sb-row b{color:#8b0000;font-family:'Cinzel',serif;}
+.sb-abilities{display:grid;grid-template-columns:repeat(6,1fr);text-align:center;margin:.4rem 0;border:1px solid rgba(139,0,0,.3);border-radius:2px;overflow:hidden;}
+.sb-ab{padding:.35rem .05rem;border-right:1px solid rgba(139,0,0,.2);}
+.sb-ab:last-child{border-right:none;}
+.sb-ab-name{font-family:'Cinzel',serif;font-size:.55rem;color:#8b0000;font-weight:700;}
+.sb-ab-val{font-size:.85rem;font-weight:700;}
+.sb-ab-mod{font-size:.65rem;color:#555;}
+.sb-trait{margin-bottom:.35rem;font-size:.76rem;line-height:1.4;}
+.sb-trait b{font-style:italic;}
+.sb-portrait-thumb{width:70px;height:90px;float:right;margin:0 0 .4rem .7rem;object-fit:cover;border:2px solid rgba(139,0,0,.4);border-radius:2px;}
+.sb-section-title{font-family:'Cinzel',serif;font-size:.72rem;color:#8b0000;font-weight:700;margin:.5rem 0 .25rem;border-bottom:1px solid rgba(139,0,0,.3);padding-bottom:.15rem;}
+
+/* REVEAL OVERLAY */
+.reveal-overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.97);
+  display:none;align-items:center;justify-content:center;flex-direction:column;gap:.8rem;}
+.reveal-overlay.active{display:flex;animation:revealIn .5s ease;}
+@keyframes revealIn{from{opacity:0;transform:scale(.92);}to{opacity:1;transform:scale(1);}}
+.reveal-content{position:relative;max-width:92vw;max-height:85vh;display:flex;gap:2rem;align-items:flex-start;flex-wrap:wrap;justify-content:center;}
+.reveal-portrait{width:min(340px,42vw);height:min(440px,58vh);border:3px solid var(--gold);border-radius:6px;
+  object-fit:cover;object-position:center top;box-shadow:0 0 60px rgba(201,168,76,.3),0 0 120px rgba(201,168,76,.08);animation:pglow 3s ease-in-out infinite alternate;}
+@keyframes pglow{from{box-shadow:0 0 40px rgba(201,168,76,.25);}to{box-shadow:0 0 80px rgba(201,168,76,.45),0 0 20px rgba(200,0,0,.25);}}
+.reveal-portrait-placeholder{width:min(340px,42vw);height:min(440px,58vh);border:3px solid var(--gold);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;background:var(--stone-mid);font-size:5rem;
+  box-shadow:0 0 60px rgba(201,168,76,.25);}
+.reveal-stat-block{max-width:340px;width:100%;max-height:85vh;overflow-y:auto;}
+.reveal-name{font-family:'Cinzel Decorative',serif;font-size:clamp(1.6rem,4.5vw,2.8rem);
+  color:var(--gold-light);text-align:center;margin-bottom:.8rem;
+  text-shadow:0 0 40px rgba(201,168,76,.5);animation:nflicker 4s ease-in-out infinite;}
+@keyframes nflicker{0%,100%{text-shadow:0 0 40px rgba(201,168,76,.5);}50%{text-shadow:0 0 70px rgba(201,168,76,.8),0 0 10px rgba(255,100,0,.25);}}
+.close-reveal{position:absolute;top:-1.8rem;right:0;background:transparent;border:none;color:var(--gold);font-size:1.4rem;cursor:pointer;opacity:.5;transition:opacity .2s;}
+.close-reveal:hover{opacity:1;}
+/* Download buttons nella reveal */
+.reveal-dl-bar{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;}
+.reveal-dl-btn{padding:.45rem 1.1rem;font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.12em;
+  border-radius:3px;cursor:pointer;transition:all .2s;touch-action:manipulation;display:flex;align-items:center;gap:.4rem;}
+.reveal-dl-btn.png{background:rgba(30,80,30,.5);border:1px solid rgba(80,180,80,.4);color:#88dd88;}
+.reveal-dl-btn.png:hover{background:rgba(30,80,30,.8);border-color:#88dd88;}
+.reveal-dl-btn.pdf{background:rgba(80,20,20,.5);border:1px solid rgba(201,168,76,.4);color:var(--gold);}
+.reveal-dl-btn.pdf:hover{background:rgba(100,30,0,.8);border-color:var(--gold);}
+.reveal-dl-btn:disabled{opacity:.4;cursor:not-allowed;}
+/* Card export (fuori schermo, usata per la cattura) */
+#exportCard{position:fixed;left:-9999px;top:0;background:#1e1408;padding:1.5rem;
+  display:flex;gap:1.5rem;align-items:flex-start;border:3px solid #c9a84c;border-radius:8px;}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:rgba(0,0,0,.3);}
+::-webkit-scrollbar-thumb{background:rgba(201,168,76,.25);border-radius:2px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(201,168,76,.4);}
+
+/* RESPONSIVE */
+@media(max-width:1100px){
+  .app{grid-template-columns:270px 1fr;}
+  #rightPanel{display:none;}
+}
+@media(max-width:700px){
+  /* ---- LAYOUT ---- */
+  .mobile-nav{display:flex;}
+  .app{grid-template-columns:1fr;}
+  .panel,.builder-panel{max-height:none;border-right:none;padding:.9rem;}
+  #leftPanel,#builderPanel,#rightPanel{display:none;}
+  #leftPanel.mobile-active,#builderPanel.mobile-active,#rightPanel.mobile-active{display:block;}
+
+  /* ---- HEADER ---- */
+  header{padding:.6rem 1rem;}
+  header h1{font-size:1.1rem;letter-spacing:.15em;}
+  header .subtitle{font-size:.52rem;}
+
+  /* ---- IMMAGINE ---- */
+  .ai-portrait-frame{aspect-ratio:4/5;max-height:70vw;}
+  .ai-placeholder-text{font-size:.65rem;}
+
+  /* ---- PROMPT + GENERA ---- */
+  .prompt-row{flex-direction:column;}
+  .prompt-row textarea{min-height:70px;font-size:.85rem;}
+  .generate-btn{width:100%;padding:.6rem;font-size:.75rem;}
+  .prompt-label{font-size:.65rem;}
+
+  /* ---- CHIP STILE/MODELLO ---- */
+  .style-chips,.model-row{gap:.3rem;}
+  .style-chip,.model-chip{font-size:.58rem;padding:.18rem .45rem;}
+
+  /* ---- FILTRI BESTIARI ---- */
+  .filter-tabs{gap:.2rem;}
+  .tab{font-size:.58rem;padding:.25rem .45rem;}
+  .search-wrap input{font-size:.85rem;}
+
+  /* ---- BUILDER ---- */
+  .select-grid{grid-template-columns:1fr;}
+  .ability-scores{grid-template-columns:repeat(3,1fr);gap:.3rem;}
+  .combat-stats{grid-template-columns:1fr 1fr;}
+  .slbl{font-size:.58rem;}
+  .enemy-name-input input{font-size:1.1rem;}
+
+  /* ---- STAT BLOCK ---- */
+  .sb-portrait-thumb{width:55px;height:70px;}
+  .sb-abilities{font-size:.6rem;}
+
+  /* ---- HISTORY THUMBNAILS ---- */
+  .img-history-thumb{width:44px;height:44px;}
+
+  /* ---- REVEAL ---- */
+  .reveal-content{flex-direction:column;align-items:center;gap:1rem;}
+  .reveal-portrait,.reveal-portrait-placeholder{width:min(260px,80vw);height:min(325px,55vh);}
+
+  /* ---- GEMINI KEY ---- */
+  .gemini-key-row{flex-wrap:wrap;}
+  .gemini-key-row input{min-width:0;font-size:.7rem;}
+}
+</style>
+</head>
+<body>
+<div class="flames" id="flames"></div>
+
+<header>
+  <h1>Il Grimorio del Dungeon Master</h1>
+  <p class="subtitle">D&D 5a Edizione — Database Completo via Open5e API</p>
+</header>
+
+<div class="mobile-nav" id="mobileNav">
+  <button class="active" onclick="showMobilePanel('left')">Bestiari</button>
+  <button onclick="showMobilePanel('builder')">Builder</button>
+  <button onclick="showMobilePanel('right')">Anteprima</button>
+</div>
+
+<div class="app">
+
+<div class="panel mobile-active" id="leftPanel">
+<div class="panel-inner">
+  <div class="panel-title">Archivio Bestiari</div>
+
+  <div class="source-toggle" id="sourceToggle">
+    <button class="active" data-src="local" onclick="setSource('local')">Locale</button>
+    <button data-src="api" onclick="setSource('api')">Open5e API</button>
+  </div>
+
+  <div class="search-wrap">
+    <div class="input-box">
+      <span class="si">&#9876;</span>
+      <input type="text" id="creatureSearch" placeholder="Cerca nome, tipo, CR...">
+    </div>
+  </div>
+
+  <div class="filter-tabs" id="filterTabs">
+    <button class="tab active" data-f="all">Tutti</button>
+    <button class="tab" data-f="beast">Bestia</button>
+    <button class="tab" data-f="undead">Nonmorto</button>
+    <button class="tab" data-f="dragon">Drago</button>
+    <button class="tab" data-f="fiend">Fiend</button>
+    <button class="tab" data-f="humanoid">Umanoide</button>
+    <button class="tab" data-f="aberration">Aberrazione</button>
+    <button class="tab" data-f="monstrosity">Mostruosita</button>
+    <button class="tab" data-f="construct">Costrutto</button>
+    <button class="tab" data-f="elemental">Elementale</button>
+    <button class="tab" data-f="fey">Fate</button>
+    <button class="tab" data-f="giant">Gigante</button>
+    <button class="tab" data-f="celestial">Celeste</button>
+    <button class="tab" data-f="ooze">Melma</button>
+    <button class="tab" data-f="plant">Pianta</button>
+    <button class="tab" data-f="swarm">Sciame</button>
+  </div>
+
+  <div id="crFilterWrap" class="cr-filter" style="display:none;">
+    <label>CR Min:</label>
+    <select id="crMin" onchange="fetchApiMonsters()">
+      <option value="">--</option>
+      <option value="0">0</option><option value="0.125">1/8</option><option value="0.25">1/4</option><option value="0.5">1/2</option>
+      <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+      <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+      <option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option>
+      <option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option>
+      <option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option>
+      <option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option>
+    </select>
+    <label>Max:</label>
+    <select id="crMax" onchange="fetchApiMonsters()">
+      <option value="">--</option>
+      <option value="0">0</option><option value="0.125">1/8</option><option value="0.25">1/4</option><option value="0.5">1/2</option>
+      <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+      <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+      <option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option>
+      <option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option>
+      <option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option>
+      <option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option>
+    </select>
+  </div>
+
+  <div id="resultCount" class="result-count"></div>
+  <div class="creature-list" id="creatureList"></div>
+</div>
+</div>
+
+<div class="builder-panel" id="builderPanel">
+
+  <div class="ai-image-area">
+    <div class="ai-portrait-frame" id="aiFrame">
+      <div class="ai-placeholder" id="aiPlaceholder">
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="35" r="22" stroke="#c9a84c" stroke-width="2"/>
+          <path d="M15 85 Q50 55 85 85" stroke="#c9a84c" stroke-width="2"/>
+          <circle cx="40" cy="30" r="3" fill="#c9a84c" opacity=".6"/>
+          <circle cx="60" cy="30" r="3" fill="#c9a84c" opacity=".6"/>
+          <path d="M40 45 Q50 52 60 45" stroke="#c9a84c" stroke-width="1.5" fill="none"/>
+          <path d="M5 50 L20 35 M95 50 L80 35" stroke="#c9a84c" stroke-width="1" opacity=".3"/>
+        </svg>
+        <div class="ai-placeholder-text">Configura il nemico e genera<br>l'immagine con l'AI</div>
+      </div>
+      <img id="aiPortrait" src="" alt="Nemico" style="display:none;width:100%;height:100%;object-fit:cover;">
+      <div id="aiLoading" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.8);z-index:10;align-items:center;justify-content:center;flex-direction:column;gap:.8rem;">
+        <div class="gen-spinner" style="display:block;width:40px;height:40px;border-width:3px;"></div>
+        <div style="font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.15em;color:var(--gold);opacity:.7;">Convocazione in corso...</div>
+      </div>
+    </div>
+
+    <div class="ai-prompt-wrap">
+      <div class="prompt-label">Prompt per la generazione AI</div>
+      <div class="prompt-row">
+        <textarea id="aiPrompt" placeholder="Descrivi l'aspetto del nemico... (es: cicatrici sul viso, armatura arrugginita, occhi infuocati)"></textarea>
+        <button class="generate-btn" id="genBtn" onclick="generateImage()">
+          <span>&#128302;</span>
+          <span>GENERA</span>
+          <div class="gen-spinner" id="genSpinner"></div>
+        </button>
+      </div>
+      <div class="style-chips" id="styleChips"></div>
+      <div class="model-row" id="modelRow"></div>
+      <div class="gemini-key-row" id="geminiKeyRow" style="display:none;">
+        <label for="geminiKeyInput" title="Ottieni gratis su aistudio.google.com">&#128273; Gemini API Key:</label>
+        <input type="password" id="geminiKeyInput" value="AIzaSyDTentmgpw8b03mgyEbMJTh1yLUFZZ9fBg" placeholder="AIza..." autocomplete="off" oninput="saveGeminiKey()">
+        <button class="gemini-key-save" onclick="toggleGeminiKeyVisibility()">&#128065;</button>
+      </div>
+      <div class="img-history" id="imgHistory"></div>
+      <div style="margin-top:.4rem;display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;">
+        <button class="tab" onclick="uploadImage()" style="padding:.2rem .5rem;">Carica</button>
+        <button class="tab" onclick="clearPortrait()" style="padding:.2rem .5rem;">Rimuovi</button>
+        <button class="tab" onclick="downloadPortrait()" style="padding:.2rem .5rem;">Salva</button>
+        <a id="imgOpenLink" href="#" target="_blank" style="display:none;font-family:'Cinzel',serif;font-size:.58rem;color:var(--api-blue-text);border:1px solid var(--api-blue-border);padding:.2rem .5rem;border-radius:2px;text-decoration:none;">Apri immagine nel browser</a>
+        <input type="file" id="imgUpload" accept="image/*" style="display:none" onchange="handleUpload(event)">
+      </div>
+    </div>
+  </div>
+
+  <div class="enemy-name-input">
+    <input type="text" id="enemyName" placeholder="Nome del Nemico..." oninput="updatePreview();autoPrompt();">
+  </div>
+
+  <div class="slbl">Identita</div>
+  <div class="select-grid">
+    <div class="sw"><label>Tipo</label>
+      <select id="selType" onchange="updatePreview();autoPrompt();">
+        <option value="">-- Tipo --</option>
+        <option>Aberrazione</option><option>Bestia</option><option>Celeste</option>
+        <option>Costrutto</option><option>Drago</option><option>Elementale</option>
+        <option>Fata</option><option>Fiend</option><option>Gigante</option>
+        <option>Umanoide</option><option>Mostruosita</option><option>Melma</option>
+        <option>Nonmorto</option><option>Pianta</option><option>Sciame</option>
+      </select></div>
+    <div class="sw"><label>Razza / Sottotipo</label>
+      <select id="selRace" onchange="updatePreview();autoPrompt();">
+        <option value="">-- Razza --</option>
+        <option>Umano</option><option>Elfo</option><option>Elfo del Bosco</option>
+        <option>Drow</option><option>Nano</option><option>Duergar</option>
+        <option>Halfling</option><option>Gnomo</option><option>Mezzorco</option>
+        <option>Tiefling</option><option>Dragonide</option><option>Aasimar</option>
+        <option>Aarakocra</option><option>Firbolg</option><option>Goliath</option>
+        <option>Kenku</option><option>Lizardfolk</option><option>Tabaxi</option>
+        <option>Triton</option><option>Tortle</option><option>Leonin</option>
+        <option>Satiro</option><option>Bugbear</option><option>Goblin</option>
+        <option>Hobgoblin</option><option>Kobold</option><option>Orco</option>
+        <option>Gnoll</option><option>Troll</option><option>Vampiro</option>
+        <option>Yuan-ti</option><option>Svirfneblin</option><option>Rettiliano</option>
+      </select></div>
+    <div class="sw"><label>Classe / Ruolo</label>
+      <select id="selClass" onchange="updatePreview();autoPrompt();">
+        <option value="">-- Classe --</option>
+        <option>Barbaro</option><option>Bardo</option><option>Chierico</option>
+        <option>Druido</option><option>Guerriero</option><option>Monaco</option>
+        <option>Paladino</option><option>Ranger</option><option>Ladro</option>
+        <option>Assassino</option><option>Stregone</option><option>Warlock</option>
+        <option>Mago</option><option>Negromante</option><option>Evocatore</option>
+        <option>Guardia</option><option>Capitano</option><option>Generale</option>
+        <option>Cultista</option><option>Fanatico</option><option>Sciamano</option>
+        <option>Berserker</option><option>Arciere</option><option>Cavaliere</option>
+        <option>Campione</option><option>Spia</option><option>Bandito</option>
+        <option>Boss dei Banditi</option><option>Gladiatore</option><option>Veterano</option>
+        <option>Arcimago</option><option>Sacerdote</option><option>Profeta</option>
+      </select></div>
+    <div class="sw"><label>Taglia</label>
+      <select id="selSize" onchange="updatePreview();autoPrompt();">
+        <option>Minuscola</option><option>Piccola</option><option selected>Media</option>
+        <option>Grande</option><option>Enorme</option><option>Mastodontica</option>
+      </select></div>
+    <div class="sw"><label>Allineamento</label>
+      <select id="selAlign" onchange="updatePreview();">
+        <option>Legale Buono</option><option>Neutrale Buono</option><option>Caotico Buono</option>
+        <option>Legale Neutrale</option><option>Neutrale</option><option>Caotico Neutrale</option>
+        <option selected>Legale Malvagio</option><option>Neutrale Malvagio</option><option>Caotico Malvagio</option>
+        <option>Senza Allineamento</option>
+      </select></div>
+    <div class="sw"><label>Grado di Sfida</label>
+      <select id="selCR" onchange="updatePreview();">
+        <option>0</option><option>1/8</option><option>1/4</option><option>1/2</option>
+        <option>1</option><option>2</option><option>3</option><option>4</option>
+        <option value="5" selected>5</option><option>6</option><option>7</option><option>8</option>
+        <option>9</option><option>10</option><option>11</option><option>12</option>
+        <option>13</option><option>14</option><option>15</option><option>16</option>
+        <option>17</option><option>18</option><option>19</option><option>20</option>
+        <option>21</option><option>22</option><option>23</option><option>24</option>
+        <option>25</option><option>26</option><option>27</option><option>28</option>
+        <option>29</option><option>30</option>
+      </select></div>
+  </div>
+
+  <div class="slbl">Aspetto</div>
+  <div class="select-grid">
+    <div class="sw"><label>Corporatura</label>
+      <select id="selBuild" onchange="autoPrompt();">
+        <option>Esile</option><option>Snella</option><option selected>Media</option>
+        <option>Robusta</option><option>Muscolosa</option><option>Massiccia</option>
+      </select></div>
+    <div class="sw"><label>Sesso</label>
+      <select id="selGender" onchange="autoPrompt();">
+        <option>Maschile</option><option>Femminile</option><option>Nessuno</option><option>Altro</option>
+      </select></div>
+  </div>
+  <div class="slbl">Pelle</div><div class="color-row" id="skinColors"></div>
+  <div class="slbl">Capelli</div><div class="color-row" id="hairColors"></div>
+  <div class="slbl">Occhi</div><div class="color-row" id="eyeColors"></div>
+
+  <div class="slbl" style="margin-top:.8rem;">Caratteristiche</div>
+  <div class="ability-scores">
+    <div class="ability-score"><div class="ab-name">FOR</div><input type="number" id="ab-str" value="15" min="1" max="30" oninput="updatePreview()"><div class="ab-mod" id="mod-str">+2</div></div>
+    <div class="ability-score"><div class="ab-name">DES</div><input type="number" id="ab-dex" value="10" min="1" max="30" oninput="updatePreview()"><div class="ab-mod" id="mod-dex">+0</div></div>
+    <div class="ability-score"><div class="ab-name">COS</div><input type="number" id="ab-con" value="14" min="1" max="30" oninput="updatePreview()"><div class="ab-mod" id="mod-con">+2</div></div>
+    <div class="ability-score"><div class="ab-name">INT</div><input type="number" id="ab-int" value="10" min="1" max="30" oninput="updatePreview()"><div class="ab-mod" id="mod-int">+0</div></div>
+    <div class="ability-score"><div class="ab-name">SAG</div><input type="number" id="ab-wis" value="12" min="1" max="30" oninput="updatePreview()"><div class="ab-mod" id="mod-wis">+1</div></div>
+    <div class="ability-score"><div class="ab-name">CAR</div><input type="number" id="ab-cha" value="8" min="1" max="30" oninput="updatePreview()"><div class="ab-mod" id="mod-cha">-1</div></div>
+  </div>
+
+  <div class="slbl">Combattimento</div>
+  <div class="combat-stats">
+    <div class="combat-stat"><div class="cs-label">PF</div><div class="cs-value"><input type="number" id="statHP" value="65" oninput="updatePreview()"></div></div>
+    <div class="combat-stat ac"><div class="cs-label">CA</div><div class="cs-value"><input type="number" id="statAC" value="15" oninput="updatePreview()"></div></div>
+    <div class="combat-stat speed"><div class="cs-label">Vel.</div><div class="cs-value"><input type="number" id="statSpeed" value="9" oninput="updatePreview()"><span class="cs-dice">m</span></div></div>
+  </div>
+
+  <div class="slbl">Resistenze ai Danni</div><div class="tag-cloud" id="damageTypes"></div>
+  <div class="slbl">Immunita Condizioni</div><div class="tag-cloud" id="conditions"></div>
+
+  <div class="slbl" style="margin-top:.8rem;">Tratti &amp; Azioni</div>
+  <div class="traits-area" id="traitsArea"></div>
+
+  <div class="slbl">Note del DM</div>
+  <div class="notes-area"><textarea id="dmNotes" placeholder="Tattiche, segreti, azioni importate da Open5e..." oninput="updatePreview()"></textarea></div>
+
+  <button class="present-btn" onclick="revealEnemy()">RIVELA IL NEMICO AL PARTY</button>
+</div>
+
+<div class="panel" id="rightPanel">
+<div class="panel-inner">
+  <div class="panel-title">Stat Block Anteprima</div>
+  <div class="stat-block" id="statBlock"></div>
+</div>
+</div>
+
+</div>
+
+<div class="reveal-overlay" id="revealOverlay">
+  <div class="reveal-content">
+    <button class="close-reveal" onclick="closeReveal()">&#10005;</button>
+    <div id="revealPortrait"></div>
+    <div>
+      <div class="reveal-name" id="revealName"></div>
+      <div class="reveal-stat-block stat-block" id="revealStatBlock"></div>
+    </div>
+  </div>
+  <div class="reveal-dl-bar">
+    <button class="reveal-dl-btn png" onclick="downloadRevealPNG()">&#128444; Scarica PNG</button>
+    <button class="reveal-dl-btn pdf" onclick="downloadRevealPDF()">&#128196; Scarica PDF</button>
+    <button class="reveal-dl-btn" style="background:rgba(20,20,60,.5);border:1px solid rgba(100,100,200,.3);color:#8899cc;" onclick="closeReveal()">&#10005; Chiudi</button>
+  </div>
+</div>
+<!-- Card usata come sorgente per html2canvas -->
+<div id="exportCard"></div>
+
+<script>
+// =====================================================
+// SVG FAVICONS per tipo creatura
+// =====================================================
+const TYPE_SVG = {
+  beast: '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><ellipse cx="18" cy="22" rx="12" ry="8" fill="#5a3a1a"/><circle cx="18" cy="13" r="7" fill="#6b4a2a"/><ellipse cx="14" cy="11" rx="2.5" ry="4" fill="#5a3a1a" transform="rotate(-15 14 11)"/><ellipse cx="22" cy="11" rx="2.5" ry="4" fill="#5a3a1a" transform="rotate(15 22 11)"/><circle cx="15" cy="14" r="1.5" fill="#1a0f00"/><circle cx="21" cy="14" r="1.5" fill="#1a0f00"/><ellipse cx="18" cy="17" rx="2" ry="1" fill="#3a2010"/></svg>',
+  undead: '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><circle cx="18" cy="14" r="10" fill="#c8c8c8"/><rect x="11" y="22" width="14" height="4" fill="#b8b8b8"/><ellipse cx="14" cy="13" rx="2.5" ry="3" fill="white"/><ellipse cx="22" cy="13" rx="2.5" ry="3" fill="white"/><circle cx="14" cy="14" r="1.5" fill="#500000"/><circle cx="22" cy="14" r="1.5" fill="#500000"/><path d="M14 19 L16 18 L18 20 L20 18 L22 19" stroke="#888" stroke-width="1.5" fill="none"/></svg>',
+  dragon: '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><path d="M8 28 L18 8 L28 28 Z" fill="#8b0000"/><path d="M18 8 L10 2 L14 12 Z" fill="#a00000"/><path d="M18 8 L26 2 L22 12 Z" fill="#a00000"/><circle cx="14" cy="16" r="2" fill="#ff8c00"/><circle cx="22" cy="16" r="2" fill="#ff8c00"/></svg>',
+  fiend: '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><ellipse cx="18" cy="20" rx="11" ry="10" fill="#4a0a0a"/><circle cx="18" cy="16" r="9" fill="#5a0a0a"/><path d="M10 8 L14 16" stroke="#cc0000" stroke-width="2"/><path d="M26 8 L22 16" stroke="#cc0000" stroke-width="2"/><ellipse cx="14" cy="15" rx="2.5" ry="2" fill="#ff2200"/><ellipse cx="22" cy="15" rx="2.5" ry="2" fill="#ff2200"/></svg>',
+  humanoid: '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><circle cx="18" cy="10" r="7" fill="#c8a882"/><rect x="12" y="17" width="12" height="12" rx="2" fill="#4a3020"/><rect x="6" y="17" width="6" height="9" rx="2" fill="#4a3020"/><rect x="24" y="17" width="6" height="9" rx="2" fill="#4a3020"/><circle cx="15" cy="9" r="1.5" fill="#1a0f00"/><circle cx="21" cy="9" r="1.5" fill="#1a0f00"/></svg>',
+  aberration: '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><ellipse cx="18" cy="18" rx="12" ry="10" fill="#1a0a3a"/><circle cx="18" cy="16" r="6" fill="#200a44"/><circle cx="18" cy="16" r="3" fill="#8800cc"/><circle cx="18" cy="16" r="1.5" fill="#000"/><path d="M6 18 Q2 14 4 10" stroke="#6600aa" stroke-width="1.5" fill="none"/><path d="M30 18 Q34 14 32 10" stroke="#6600aa" stroke-width="1.5" fill="none"/></svg>',
+  monstrosity: '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><ellipse cx="18" cy="20" rx="13" ry="11" fill="#2a3a1a"/><circle cx="18" cy="14" r="9" fill="#2a3a1a"/><ellipse cx="13" cy="13" rx="2.5" ry="2" fill="#ff6600"/><ellipse cx="23" cy="13" rx="2.5" ry="2" fill="#ff6600"/><path d="M12 19 L14 17 L16 20 L18 17 L20 20 L22 17 L24 19" stroke="#1a2a10" stroke-width="1.5" fill="none"/></svg>',
+  construct: '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="6" width="16" height="14" rx="2" fill="#5a5a5a"/><rect x="12" y="20" width="12" height="12" rx="1" fill="#4a4a4a"/><rect x="13" y="10" width="4" height="4" rx="1" fill="#88ddff"/><rect x="19" y="10" width="4" height="4" rx="1" fill="#88ddff"/></svg>',
+  elemental: '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><path d="M18 4 L22 14 L30 10 L24 20 L32 22 L22 24 L24 34 L18 26 L12 34 L14 24 L4 22 L12 20 L6 10 L14 14 Z" fill="#ff6600" opacity=".9"/><circle cx="18" cy="20" r="4" fill="#ffdd00"/></svg>',
+  fey: '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><circle cx="18" cy="14" r="8" fill="#3a1a5a"/><circle cx="14" cy="13" r="2" fill="#cc88ff"/><circle cx="22" cy="13" r="2" fill="#cc88ff"/><path d="M14 18 Q18 22 22 18" stroke="#aa66ff" stroke-width="1.5" fill="none"/><path d="M6 20 Q4 28 8 30 Q18 36 28 30 Q32 28 30 20" fill="#2a1a4a" stroke="#cc88ff" stroke-width="1"/></svg>',
+  giant: '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><circle cx="18" cy="9" r="8" fill="#8b7355"/><rect x="10" y="17" width="16" height="14" rx="2" fill="#7a6040"/><rect x="4" y="16" width="7" height="10" rx="2" fill="#7a6040"/><rect x="25" y="16" width="7" height="10" rx="2" fill="#7a6040"/><circle cx="14" cy="8" r="2" fill="#1a0f00"/><circle cx="22" cy="8" r="2" fill="#1a0f00"/></svg>',
+  celestial: '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><circle cx="18" cy="14" r="8" fill="#f5e6c0"/><path d="M8 14 Q4 8 8 4 Q12 14 8 14 Z" fill="#ffe080"/><path d="M28 14 Q32 8 28 4 Q24 14 28 14 Z" fill="#ffe080"/><circle cx="14" cy="13" r="2" fill="#6060a0"/><circle cx="22" cy="13" r="2" fill="#6060a0"/><circle cx="18" cy="8" r="2" fill="#ffdd00"/></svg>',
+  ooze: '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><ellipse cx="18" cy="22" rx="14" ry="12" fill="#2a5a1a" opacity=".9"/><ellipse cx="14" cy="14" rx="8" ry="7" fill="#2a5a1a"/><circle cx="12" cy="18" r="3" fill="#44aa22" opacity=".6"/><circle cx="22" cy="20" r="4" fill="#44aa22" opacity=".5"/></svg>',
+  plant: '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><rect x="16" y="20" width="4" height="16" fill="#5a3a10"/><ellipse cx="18" cy="16" rx="12" ry="10" fill="#2a5a1a"/><circle cx="14" cy="14" r="2" fill="#ffaa00"/><circle cx="22" cy="14" r="2" fill="#ffaa00"/></svg>',
+  swarm: '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="12" r="3" fill="#4a3a1a"/><circle cx="16" cy="8" r="3" fill="#4a3a1a"/><circle cx="24" cy="10" r="3" fill="#4a3a1a"/><circle cx="14" cy="20" r="3" fill="#4a3a1a"/><circle cx="22" cy="18" r="3" fill="#4a3a1a"/><circle cx="30" cy="22" r="3" fill="#4a3a1a"/><circle cx="10" cy="30" r="3" fill="#4a3a1a"/><circle cx="20" cy="28" r="3" fill="#4a3a1a"/></svg>',
+};
+function getTypeSVG(type) {
+  if(!type) return TYPE_SVG.humanoid;
+  const t = type.toLowerCase().replace(/\s/g,'');
+  // Map English API types to our keys
+  const map = {beast:'beast',undead:'undead',dragon:'dragon',fiend:'fiend',humanoid:'humanoid',
+    aberration:'aberration',monstrosity:'monstrosity',construct:'construct',elemental:'elemental',
+    fey:'fey',giant:'giant',celestial:'celestial',ooze:'ooze',plant:'plant',swarm:'swarm'};
+  return TYPE_SVG[map[t]] || TYPE_SVG.humanoid;
+}
+
+// =====================================================
+// LOCAL CREATURE DATABASE (expanded)
+// =====================================================
+const CREATURES = [
+  // BEASTS
+  {id:'bat',name:'Pipistrello',type:'beast',cr:'0',hp:1,ac:12,spd:5,str:2,dex:15,con:8,int:2,wis:12,cha:4,align:'Neutrale',size:'Minuscola',book:'MM'},
+  {id:'cat',name:'Gatto',type:'beast',cr:'0',hp:2,ac:12,spd:12,str:3,dex:15,con:10,int:3,wis:12,cha:7,align:'Neutrale',size:'Minuscola',book:'MM'},
+  {id:'rat',name:'Ratto',type:'beast',cr:'0',hp:1,ac:10,spd:6,str:2,dex:11,con:9,int:2,wis:10,cha:4,align:'Neutrale',size:'Minuscola',book:'MM'},
+  {id:'wolf',name:'Lupo',type:'beast',cr:'1/4',hp:11,ac:13,spd:12,str:12,dex:15,con:12,int:3,wis:12,cha:6,align:'Neutrale',size:'Media',book:'MM'},
+  {id:'brown_bear',name:'Orso Bruno',type:'beast',cr:'1',hp:34,ac:11,spd:12,str:19,dex:10,con:16,int:2,wis:13,cha:7,align:'Neutrale',size:'Grande',book:'MM'},
+  {id:'dire_wolf',name:'Lupo Feroce',type:'beast',cr:'1',hp:37,ac:14,spd:15,str:17,dex:15,con:15,int:3,wis:12,cha:7,align:'Neutrale',size:'Grande',book:'MM'},
+  {id:'giant_spider',name:'Ragno Gigante',type:'beast',cr:'1',hp:26,ac:14,spd:9,str:14,dex:16,con:12,int:2,wis:11,cha:4,align:'Neutrale',size:'Grande',book:'MM'},
+  {id:'giant_eagle',name:'Aquila Gigante',type:'beast',cr:'1',hp:26,ac:13,spd:3,str:16,dex:17,con:13,int:8,wis:14,cha:10,align:'Neutrale Buono',size:'Grande',book:'MM'},
+  {id:'lion',name:'Leone',type:'beast',cr:'1',hp:26,ac:12,spd:15,str:17,dex:15,con:13,int:3,wis:12,cha:8,align:'Neutrale',size:'Grande',book:'MM'},
+  {id:'tiger',name:'Tigre',type:'beast',cr:'1',hp:37,ac:12,spd:12,str:17,dex:15,con:14,int:3,wis:12,cha:8,align:'Neutrale',size:'Grande',book:'MM'},
+  {id:'giant_ape',name:'Scimmia Gigante',type:'beast',cr:'7',hp:157,ac:12,spd:12,str:23,dex:14,con:18,int:7,wis:12,cha:7,align:'Neutrale',size:'Enorme',book:'MM'},
+  // UNDEAD
+  {id:'zombie',name:'Zombie',type:'undead',cr:'1/4',hp:22,ac:8,spd:6,str:13,dex:6,con:16,int:3,wis:6,cha:5,align:'Neutrale Malvagio',size:'Media',book:'MM'},
+  {id:'skeleton',name:'Scheletro',type:'undead',cr:'1/4',hp:13,ac:13,spd:9,str:10,dex:14,con:15,int:6,wis:8,cha:5,align:'Legale Malvagio',size:'Media',book:'MM'},
+  {id:'ghoul',name:'Ghoul',type:'undead',cr:'1',hp:22,ac:12,spd:9,str:13,dex:15,con:10,int:7,wis:10,cha:6,align:'Caotico Malvagio',size:'Media',book:'MM'},
+  {id:'wight',name:'Wight',type:'undead',cr:'3',hp:45,ac:14,spd:9,str:15,dex:14,con:16,int:10,wis:13,cha:15,align:'Neutrale Malvagio',size:'Media',book:'MM'},
+  {id:'wraith',name:'Spettro',type:'undead',cr:'5',hp:67,ac:13,spd:0,str:6,dex:16,con:16,int:12,wis:14,cha:15,align:'Neutrale Malvagio',size:'Media',book:'MM'},
+  {id:'mummy',name:'Mummia',type:'undead',cr:'3',hp:58,ac:11,spd:6,str:16,dex:8,con:15,int:6,wis:10,cha:12,align:'Legale Malvagio',size:'Media',book:'MM'},
+  {id:'vampire',name:'Vampiro',type:'undead',cr:'13',hp:144,ac:16,spd:9,str:18,dex:18,con:18,int:17,wis:15,cha:18,align:'Legale Malvagio',size:'Media',book:'MM'},
+  {id:'lich',name:'Lich',type:'undead',cr:'21',hp:135,ac:17,spd:9,str:11,dex:16,con:16,int:20,wis:14,cha:16,align:'Neutrale Malvagio',size:'Media',book:'MM'},
+  {id:'death_knight',name:'Cavaliere della Morte',type:'undead',cr:'17',hp:180,ac:20,spd:9,str:20,dex:11,con:20,int:12,wis:16,cha:18,align:'Caotico Malvagio',size:'Media',book:'MM'},
+  // DRAGONS
+  {id:'drag_red_adult',name:'Drago Rosso Adulto',type:'dragon',cr:'17',hp:256,ac:19,spd:12,str:27,dex:10,con:25,int:16,wis:13,cha:21,align:'Caotico Malvagio',size:'Enorme',book:'MM'},
+  {id:'drag_blue_adult',name:'Drago Blu Adulto',type:'dragon',cr:'16',hp:225,ac:19,spd:12,str:25,dex:10,con:23,int:16,wis:13,cha:20,align:'Legale Malvagio',size:'Enorme',book:'MM'},
+  {id:'drag_green_adult',name:'Drago Verde Adulto',type:'dragon',cr:'15',hp:207,ac:19,spd:12,str:23,dex:12,con:21,int:18,wis:15,cha:17,align:'Legale Malvagio',size:'Enorme',book:'MM'},
+  {id:'drag_black_adult',name:'Drago Nero Adulto',type:'dragon',cr:'14',hp:195,ac:19,spd:12,str:23,dex:14,con:21,int:14,wis:13,cha:17,align:'Caotico Malvagio',size:'Enorme',book:'MM'},
+  {id:'drag_white_adult',name:'Drago Bianco Adulto',type:'dragon',cr:'13',hp:200,ac:18,spd:12,str:22,dex:10,con:22,int:8,wis:12,cha:12,align:'Caotico Malvagio',size:'Enorme',book:'MM'},
+  {id:'wyvern',name:'Viverna',type:'dragon',cr:'6',hp:110,ac:13,spd:6,str:19,dex:10,con:16,int:5,wis:12,cha:6,align:'Neutrale',size:'Grande',book:'MM'},
+  {id:'pseudodragon',name:'Pseudodrago',type:'dragon',cr:'1/4',hp:7,ac:13,spd:5,str:6,dex:15,con:13,int:10,wis:12,cha:10,align:'Neutrale Buono',size:'Minuscola',book:'MM'},
+  // FIENDS
+  {id:'imp',name:'Diavoletto',type:'fiend',cr:'1',hp:10,ac:13,spd:6,str:6,dex:17,con:13,int:11,wis:12,cha:14,align:'Legale Malvagio',size:'Minuscola',book:'MM'},
+  {id:'quasit',name:'Quasit',type:'fiend',cr:'1',hp:7,ac:13,spd:12,str:5,dex:17,con:10,int:7,wis:10,cha:10,align:'Caotico Malvagio',size:'Minuscola',book:'MM'},
+  {id:'succubus',name:'Succube/Incubo',type:'fiend',cr:'4',hp:66,ac:15,spd:9,str:8,dex:17,con:13,int:15,wis:12,cha:20,align:'Neutrale Malvagio',size:'Media',book:'MM'},
+  {id:'vrock',name:'Vrock',type:'fiend',cr:'6',hp:104,ac:15,spd:12,str:17,dex:15,con:18,int:8,wis:13,cha:8,align:'Caotico Malvagio',size:'Grande',book:'MM'},
+  {id:'hezrou',name:'Hezrou',type:'fiend',cr:'8',hp:136,ac:16,spd:9,str:19,dex:17,con:20,int:5,wis:12,cha:13,align:'Caotico Malvagio',size:'Grande',book:'MM'},
+  {id:'pit_fiend',name:'Signore del Pozzo',type:'fiend',cr:'20',hp:300,ac:19,spd:9,str:26,dex:14,con:24,int:22,wis:18,cha:24,align:'Legale Malvagio',size:'Grande',book:'MM'},
+  {id:'balor',name:'Balor',type:'fiend',cr:'19',hp:262,ac:19,spd:12,str:26,dex:15,con:22,int:20,wis:16,cha:22,align:'Caotico Malvagio',size:'Enorme',book:'MM'},
+  // HUMANOIDS
+  {id:'goblin',name:'Goblin',type:'humanoid',cr:'1/4',hp:7,ac:15,spd:9,str:8,dex:14,con:10,int:10,wis:8,cha:8,align:'Neutrale Malvagio',size:'Piccola',book:'MM'},
+  {id:'orc',name:'Orco',type:'humanoid',cr:'1/2',hp:15,ac:13,spd:9,str:16,dex:12,con:16,int:7,wis:11,cha:10,align:'Caotico Malvagio',size:'Media',book:'MM'},
+  {id:'bandit',name:'Bandito',type:'humanoid',cr:'1/8',hp:11,ac:12,spd:9,str:11,dex:12,con:12,int:10,wis:10,cha:10,align:'Caotico Neutrale',size:'Media',book:'MM'},
+  {id:'bandit_captain',name:'Capitano dei Banditi',type:'humanoid',cr:'2',hp:65,ac:15,spd:9,str:15,dex:16,con:14,int:14,wis:11,cha:14,align:'Caotico Neutrale',size:'Media',book:'MM'},
+  {id:'knight',name:'Cavaliere',type:'humanoid',cr:'3',hp:52,ac:18,spd:9,str:16,dex:11,con:14,int:11,wis:11,cha:15,align:'Neutrale',size:'Media',book:'MM'},
+  {id:'mage',name:'Mago',type:'humanoid',cr:'6',hp:40,ac:12,spd:9,str:9,dex:14,con:11,int:17,wis:12,cha:11,align:'Neutrale',size:'Media',book:'MM'},
+  {id:'archmage',name:'Arcimago',type:'humanoid',cr:'12',hp:99,ac:12,spd:9,str:10,dex:14,con:12,int:20,wis:15,cha:16,align:'Neutrale',size:'Media',book:'MM'},
+  {id:'assassin',name:'Assassino',type:'humanoid',cr:'8',hp:78,ac:15,spd:9,str:11,dex:16,con:14,int:13,wis:11,cha:10,align:'Neutrale Malvagio',size:'Media',book:'MM'},
+  {id:'gladiator',name:'Gladiatore',type:'humanoid',cr:'5',hp:112,ac:16,spd:9,str:18,dex:15,con:16,int:10,wis:12,cha:15,align:'Neutrale',size:'Media',book:'MM'},
+  {id:'hobgoblin',name:'Hobgoblin',type:'humanoid',cr:'1/2',hp:11,ac:18,spd:9,str:13,dex:12,con:12,int:10,wis:10,cha:9,align:'Legale Malvagio',size:'Media',book:'MM'},
+  {id:'kobold',name:'Coboldo',type:'humanoid',cr:'1/8',hp:5,ac:12,spd:9,str:7,dex:15,con:9,int:8,wis:7,cha:8,align:'Legale Malvagio',size:'Piccola',book:'MM'},
+  {id:'bugbear',name:'Bugbear',type:'humanoid',cr:'1',hp:27,ac:16,spd:9,str:15,dex:14,con:13,int:8,wis:11,cha:9,align:'Caotico Malvagio',size:'Media',book:'MM'},
+  {id:'gnoll',name:'Gnoll',type:'humanoid',cr:'1/2',hp:22,ac:15,spd:9,str:14,dex:12,con:11,int:6,wis:10,cha:7,align:'Caotico Malvagio',size:'Media',book:'MM'},
+  // ABERRATIONS
+  {id:'mindflayer',name:'Divoratore di Menti',type:'aberration',cr:'7',hp:71,ac:15,spd:9,str:11,dex:12,con:12,int:19,wis:17,cha:17,align:'Legale Malvagio',size:'Media',book:'MM'},
+  {id:'beholder',name:'Beholder',type:'aberration',cr:'13',hp:180,ac:18,spd:0,str:10,dex:14,con:18,int:17,wis:15,cha:17,align:'Legale Malvagio',size:'Grande',book:'MM'},
+  {id:'aboleth',name:'Aboleth',type:'aberration',cr:'10',hp:135,ac:17,spd:3,str:21,dex:9,con:15,int:18,wis:15,cha:18,align:'Legale Malvagio',size:'Grande',book:'MM'},
+  {id:'gibbering_mouther',name:'Bocca Farneticante',type:'aberration',cr:'2',hp:67,ac:9,spd:3,str:10,dex:8,con:16,int:3,wis:10,cha:6,align:'Neutrale',size:'Media',book:'MM'},
+  // MONSTROSITIES
+  {id:'manticore',name:'Manticora',type:'monstrosity',cr:'3',hp:68,ac:14,spd:9,str:17,dex:16,con:17,int:7,wis:12,cha:8,align:'Legale Malvagio',size:'Grande',book:'MM'},
+  {id:'minotaur',name:'Minotauro',type:'monstrosity',cr:'3',hp:76,ac:14,spd:12,str:18,dex:11,con:16,int:6,wis:16,cha:9,align:'Caotico Malvagio',size:'Grande',book:'MM'},
+  {id:'owlbear',name:'Guforso',type:'monstrosity',cr:'3',hp:59,ac:13,spd:12,str:20,dex:12,con:17,int:3,wis:12,cha:7,align:'Neutrale',size:'Grande',book:'MM'},
+  {id:'basilisk',name:'Basilisco',type:'monstrosity',cr:'3',hp:52,ac:15,spd:6,str:16,dex:8,con:15,int:2,wis:8,cha:7,align:'Neutrale',size:'Media',book:'MM'},
+  {id:'chimera',name:'Chimera',type:'monstrosity',cr:'6',hp:114,ac:14,spd:9,str:19,dex:11,con:19,int:3,wis:14,cha:10,align:'Caotico Malvagio',size:'Grande',book:'MM'},
+  {id:'hydra',name:'Idra',type:'monstrosity',cr:'8',hp:172,ac:15,spd:9,str:20,dex:12,con:20,int:2,wis:10,cha:7,align:'Neutrale',size:'Enorme',book:'MM'},
+  {id:'medusa',name:'Medusa',type:'monstrosity',cr:'6',hp:127,ac:15,spd:9,str:10,dex:15,con:16,int:12,wis:13,cha:15,align:'Legale Malvagio',size:'Media',book:'MM'},
+  // CONSTRUCTS
+  {id:'animated_armor',name:'Armatura Animata',type:'construct',cr:'1',hp:33,ac:18,spd:8,str:14,dex:11,con:13,int:1,wis:3,cha:1,align:'Neutrale',size:'Media',book:'MM'},
+  {id:'golem_iron',name:'Golem di Ferro',type:'construct',cr:'16',hp:210,ac:20,spd:9,str:24,dex:9,con:20,int:3,wis:11,cha:1,align:'Neutrale',size:'Grande',book:'MM'},
+  {id:'golem_stone',name:'Golem di Pietra',type:'construct',cr:'10',hp:178,ac:17,spd:9,str:22,dex:9,con:20,int:3,wis:11,cha:1,align:'Neutrale',size:'Grande',book:'MM'},
+  {id:'shield_guardian',name:'Guardiano dello Scudo',type:'construct',cr:'7',hp:142,ac:17,spd:9,str:18,dex:8,con:18,int:7,wis:10,cha:3,align:'Neutrale',size:'Grande',book:'MM'},
+  // ELEMENTALS
+  {id:'fire_elem',name:'Elementale del Fuoco',type:'elemental',cr:'5',hp:102,ac:13,spd:15,str:10,dex:17,con:16,int:6,wis:10,cha:7,align:'Neutrale',size:'Grande',book:'MM'},
+  {id:'water_elem',name:'Elementale dell\'Acqua',type:'elemental',cr:'5',hp:114,ac:14,spd:9,str:18,dex:14,con:18,int:5,wis:10,cha:8,align:'Neutrale',size:'Grande',book:'MM'},
+  {id:'earth_elem',name:'Elementale della Terra',type:'elemental',cr:'5',hp:126,ac:17,spd:9,str:20,dex:8,con:20,int:5,wis:10,cha:5,align:'Neutrale',size:'Grande',book:'MM'},
+  {id:'air_elem',name:'Elementale dell\'Aria',type:'elemental',cr:'5',hp:90,ac:15,spd:0,str:14,dex:20,con:14,int:6,wis:10,cha:6,align:'Neutrale',size:'Grande',book:'MM'},
+  // FEY
+  {id:'dryad',name:'Driade',type:'fey',cr:'1',hp:22,ac:11,spd:9,str:10,dex:12,con:11,int:14,wis:15,cha:18,align:'Neutrale',size:'Media',book:'MM'},
+  {id:'green_hag',name:'Strega Verde',type:'fey',cr:'3',hp:82,ac:17,spd:9,str:18,dex:12,con:16,int:13,wis:14,cha:14,align:'Neutrale Malvagio',size:'Media',book:'MM'},
+  // GIANTS
+  {id:'hill_giant',name:'Gigante delle Colline',type:'giant',cr:'5',hp:105,ac:13,spd:12,str:21,dex:8,con:19,int:5,wis:9,cha:6,align:'Caotico Malvagio',size:'Enorme',book:'MM'},
+  {id:'frost_giant',name:'Gigante del Gelo',type:'giant',cr:'8',hp:138,ac:15,spd:12,str:23,dex:9,con:21,int:9,wis:10,cha:12,align:'Neutrale Malvagio',size:'Enorme',book:'MM'},
+  {id:'fire_giant',name:'Gigante del Fuoco',type:'giant',cr:'9',hp:162,ac:18,spd:9,str:25,dex:9,con:23,int:10,wis:14,cha:13,align:'Legale Malvagio',size:'Enorme',book:'MM'},
+  {id:'storm_giant',name:'Gigante delle Tempeste',type:'giant',cr:'13',hp:230,ac:16,spd:15,str:29,dex:14,con:20,int:16,wis:18,cha:18,align:'Caotico Buono',size:'Enorme',book:'MM'},
+  // CELESTIALS
+  {id:'deva',name:'Deva',type:'celestial',cr:'10',hp:136,ac:17,spd:9,str:18,dex:18,con:18,int:17,wis:20,cha:20,align:'Legale Buono',size:'Media',book:'MM'},
+  {id:'planetar',name:'Planetar',type:'celestial',cr:'16',hp:200,ac:19,spd:12,str:24,dex:20,con:24,int:19,wis:22,cha:25,align:'Legale Buono',size:'Grande',book:'MM'},
+  // OOZE
+  {id:'gelatinous_cube',name:'Cubo Gelatinoso',type:'ooze',cr:'2',hp:84,ac:6,spd:5,str:14,dex:3,con:20,int:1,wis:6,cha:1,align:'Neutrale',size:'Grande',book:'MM'},
+  {id:'black_pudding',name:'Budino Nero',type:'ooze',cr:'4',hp:85,ac:7,spd:6,str:16,dex:5,con:16,int:1,wis:6,cha:1,align:'Neutrale',size:'Grande',book:'MM'},
+  // PLANTS
+  {id:'treant',name:'Treant',type:'plant',cr:'9',hp:138,ac:16,spd:9,str:23,dex:8,con:21,int:12,wis:16,cha:12,align:'Caotico Buono',size:'Enorme',book:'MM'},
+  {id:'shambling_mound',name:'Cumulo Ambulante',type:'plant',cr:'5',hp:136,ac:15,spd:6,str:18,dex:8,con:16,int:5,wis:10,cha:5,align:'Neutrale',size:'Grande',book:'MM'},
+];
+
+// =====================================================
+// CONSTANTS
+// =====================================================
+const SKIN_COLORS=[{c:'#f5d5ae'},{c:'#d4a574'},{c:'#c8a882'},{c:'#8b6914'},{c:'#6b4c2a'},{c:'#3d2308'},{c:'#c8d4ae'},{c:'#7ab8a0'},{c:'#4a7c59'},{c:'#c05050'},{c:'#8050c0'},{c:'#e0e0e0'},{c:'#808080'},{c:'#2a4a2a'}];
+const HAIR_COLORS=[{c:'#1a0800'},{c:'#3d2308'},{c:'#8b6914'},{c:'#d4a02a'},{c:'#c0392b'},{c:'#808080'},{c:'#e8e8e8'},{c:'#2c5f8a'},{c:'#4a7c59'},{c:'#8b4a8b'},{c:'#e85d04'},{c:'#c8a882'}];
+const EYE_COLORS=[{c:'#3d2308'},{c:'#2c5f8a'},{c:'#4a7c59'},{c:'#808080'},{c:'#c9a84c'},{c:'#8b4a8b'},{c:'#c0392b'},{c:'#000000'},{c:'#e85d04'},{c:'#00e0ff'},{c:'#7fff00'},{c:'#ffffff'}];
+const DAMAGE_TYPES=['Fuoco','Freddo','Fulmine','Veleno','Acido','Psichico','Necrotico','Radiante','Forza','Tuono','Perforante','Tagliente','Contundente'];
+const CONDITIONS=['Avvelenato','Paura','Paralisi','Fascinato','Accecato','Sordita','Esausto','Prono','Immobile','Incapacitato'];
+const STYLE_CHIPS=[
+  {label:'Realistico',val:'realistic, detailed illustration'},
+  {label:'Fantasy Art',val:'fantasy concept art, epic'},
+  {label:'Dark Fantasy',val:'dark fantasy, grim, menacing'},
+  {label:'D&D Official',val:'dungeons and dragons official art style, detailed'},
+  {label:'Inchiostro',val:'ink drawing, pen and ink, detailed linework'},
+  {label:'Dipinto',val:'oil painting, dramatic lighting'},
+  {label:'Miniatura',val:'painted miniature figurine style'},
+  {label:'Anime',val:'anime style, cel shaded, vibrant colors'},
+  {label:'Gotico',val:'gothic art, dark cathedral, religious iconography'},
+];
+// Modelli validi Pollinations 2025 + Gemini (usa chiave personale)
+const AI_MODELS=[
+  {label:'NanaBanana 2',val:'gemini-flash',desc:'Google 3.1 Flash Image — tenta 3 modelli in automatico'},
+  {label:'Imagen 4',val:'imagen-3',desc:'Google Imagen 4 — qualita massima'},
+  {label:'Imagen 4 Fast',val:'imagen-4-fast',desc:'Google Imagen 4 Fast — veloce'},
+  {label:'Flux (fallback)',val:'flux-only',desc:'Pollinations flux — alternativa se Google non funziona'},
+];
+
+const SIZE_MAP = {Tiny:'Minuscola',Small:'Piccola',Medium:'Media',Large:'Grande',Huge:'Enorme',Gargantuan:'Mastodontica'};
+const TYPE_MAP_ITA = {
+  aberration:'Aberrazione',beast:'Bestia',celestial:'Celeste',construct:'Costrutto',
+  dragon:'Drago',elemental:'Elementale',fey:'Fata',fiend:'Fiend',giant:'Gigante',
+  humanoid:'Umanoide',monstrosity:'Mostruosita',ooze:'Melma',plant:'Pianta',
+  swarm:'Sciame',undead:'Nonmorto'
+};
+const TYPE_MAP_ENG = {};
+Object.entries(TYPE_MAP_ITA).forEach(([k,v])=> TYPE_MAP_ENG[v.toLowerCase()] = k);
+
+// =====================================================
+// STATE
+// =====================================================
+let selectedCreature = null;
+let portraitSrc = '';
+let selSkin = '#c8a882', selHair = '#3d2308', selEye = '#2c5f8a';
+let activeFilter = 'all';
+let activeResist = new Set(), activeCondImm = new Set();
+let activeStyles = new Set(['D&D Official']);
+let activeModel = 'gemini-flash';
+let imageHistory = [];
+let currentSource = 'local'; // 'local' or 'api'
+let apiNextUrl = null;
+let apiLoading = false;
+let apiSearchTimeout = null;
+let loadedApiCreature = null; // full Open5e data for loaded creature
+
+// =====================================================
+// INIT
+// =====================================================
+function init(){
+  createFlames();
+  renderColors();
+  renderTags();
+  renderStyleChips();
+  renderModelChips();
+  renderCreatureList();
+  updatePreview();
+  // Ripristina chiave Gemini salvata
+  const savedKey = loadGeminiKey();
+  if(savedKey){
+    const inp = document.getElementById('geminiKeyInput');
+    if(inp) inp.value = savedKey;
+  }
+}
+
+function createFlames(){
+  const f = document.getElementById('flames');
+  for(let i = 0; i < 20; i++){
+    const el = document.createElement('div');
+    el.className = 'flame';
+    el.style.cssText = `left:${Math.random()*100}%;width:${2+Math.random()*4}px;height:${8+Math.random()*18}px;background:linear-gradient(to top,#e85d04,#c9a84c,transparent);animation-duration:${3+Math.random()*5}s;animation-delay:${Math.random()*6}s;`;
+    f.appendChild(el);
+  }
+}
+
+function renderColors(){
+  const mk = (id,arr,cur,set) => {
+    const el = document.getElementById(id); el.innerHTML = '';
+    arr.forEach(({c}) => {
+      const d = document.createElement('div');
+      d.className = 'color-swatch' + (c === cur ? ' selected' : '');
+      d.style.background = c; d.title = c;
+      d.onclick = () => { set(c); renderColors(); autoPrompt(); };
+      el.appendChild(d);
+    });
+  };
+  mk('skinColors',SKIN_COLORS,selSkin,v => selSkin = v);
+  mk('hairColors',HAIR_COLORS,selHair,v => selHair = v);
+  mk('eyeColors',EYE_COLORS,selEye,v => selEye = v);
+}
+
+function renderTags(){
+  const dt = document.getElementById('damageTypes'); dt.innerHTML = '';
+  DAMAGE_TYPES.forEach(d => {
+    const b = document.createElement('button');
+    b.className = 'tag' + (activeResist.has(d) ? ' active' : '');
+    b.textContent = d;
+    b.onclick = () => { activeResist.has(d) ? activeResist.delete(d) : activeResist.add(d); renderTags(); updatePreview(); };
+    dt.appendChild(b);
+  });
+  const cc = document.getElementById('conditions'); cc.innerHTML = '';
+  CONDITIONS.forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'tag cond' + (activeCondImm.has(c) ? ' active' : '');
+    b.textContent = c;
+    b.onclick = () => { activeCondImm.has(c) ? activeCondImm.delete(c) : activeCondImm.add(c); renderTags(); updatePreview(); };
+    cc.appendChild(b);
+  });
+}
+
+function renderStyleChips(){
+  const el = document.getElementById('styleChips'); el.innerHTML = '';
+  STYLE_CHIPS.forEach(({label}) => {
+    const b = document.createElement('button');
+    b.className = 'style-chip' + (activeStyles.has(label) ? ' on' : '');
+    b.textContent = label;
+    b.onclick = () => { activeStyles.has(label) ? activeStyles.delete(label) : activeStyles.add(label); renderStyleChips(); autoPrompt(); };
+    el.appendChild(b);
+  });
+}
+
+function renderModelChips(){
+  const el = document.getElementById('modelRow');
+  el.innerHTML = '<label>Modello AI:</label>';
+  const GOOGLE_MODELS = ['gemini-flash','gemini-25','imagen-3','imagen-4-fast'];
+  AI_MODELS.forEach(({label,val,desc}) => {
+    const b = document.createElement('button');
+    b.className = 'model-chip' + (activeModel === val ? ' on' : '');
+    const isG = GOOGLE_MODELS.includes(val);
+    if(isG) b.style.cssText += 'border-color:rgba(136,170,255,.3);color:#8899dd;';
+    if(isG && activeModel === val) b.style.cssText += 'background:rgba(50,80,200,.25);border-color:rgba(136,170,255,.6);color:#aabfff;';
+    b.textContent = label;
+    b.title = desc;
+    b.onclick = () => { activeModel = val; renderModelChips(); };
+    el.appendChild(b);
+  });
+  // Mostra chiave Google solo per modelli Google
+  const keyRow = document.getElementById('geminiKeyRow');
+  if(keyRow) keyRow.style.display = GOOGLE_MODELS.includes(activeModel) ? 'flex' : 'none';
+}
+
+// =====================================================
+// MOBILE NAVIGATION
+// =====================================================
+function showMobilePanel(which){
+  document.querySelectorAll('#mobileNav button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.app > *').forEach(p => p.classList.remove('mobile-active'));
+  if(which === 'left'){ document.getElementById('leftPanel').classList.add('mobile-active'); }
+  else if(which === 'builder'){ document.getElementById('builderPanel').classList.add('mobile-active'); }
+  else if(which === 'right'){ document.getElementById('rightPanel').classList.add('mobile-active'); }
+  event.target.classList.add('active');
+}
+
+// =====================================================
+// SOURCE TOGGLE (Local / API)
+// =====================================================
+function setSource(src){
+  currentSource = src;
+  document.querySelectorAll('#sourceToggle button').forEach(b => b.classList.remove('active'));
+  document.querySelector(`#sourceToggle button[data-src="${src}"]`).classList.add('active');
+  document.getElementById('crFilterWrap').style.display = src === 'api' ? 'flex' : 'none';
+  document.getElementById('creatureSearch').value = '';
+  document.getElementById('resultCount').textContent = '';
+
+  if(src === 'api'){
+    fetchApiMonsters();
+  } else {
+    renderCreatureList();
+  }
+}
+
+// =====================================================
+// LOCAL CREATURE LIST
+// =====================================================
+function renderCreatureList(filter,search){
+  if(currentSource === 'api') return;
+  filter = filter || activeFilter;
+  search = search || '';
+  const list = document.getElementById('creatureList'); list.innerHTML = '';
+  const filtered = CREATURES.filter(c => {
+    const mt = filter === 'all' || c.type === filter;
+    const ms = !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.type.toLowerCase().includes(search.toLowerCase()) || c.book.toLowerCase().includes(search.toLowerCase());
+    return mt && ms;
+  });
+  document.getElementById('resultCount').textContent = `${filtered.length} creature nel grimorio locale`;
+  filtered.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'creature-item' + (selectedCreature?.id === c.id ? ' selected' : '');
+    div.innerHTML = `
+      <div class="creature-avatar">${getTypeSVG(c.type)}</div>
+      <div class="creature-info">
+        <div class="creature-name">${c.name}</div>
+        <div class="creature-meta">${c.size} ${c.type} - ${c.book}</div>
+      </div>
+      <div class="cr-badge">CR ${c.cr}</div>`;
+    div.onclick = () => loadCreature(c);
+    list.appendChild(div);
+  });
+}
+
+// =====================================================
+// OPEN5E API — On-demand browse with pagination
+// =====================================================
+let apiAbortController = null;
+
+async function fetchApiMonsters(append){
+  if(apiLoading){ apiLoading = false; }
+  // avoid stale state
+  const list = document.getElementById('creatureList');
+
+  if(!append){
+    list.innerHTML = '';
+    apiNextUrl = null;
+  }
+
+  // Cancel previous request
+  if(apiAbortController) apiAbortController.abort();
+  apiAbortController = new AbortController();
+
+  apiLoading = true;
+  list.insertAdjacentHTML('beforeend','<div class="list-loading" id="apiLoadingIndicator">Consultando i tomi del Multiverso<span class="dots"></span></div>');
+
+  let url;
+  if(append && apiNextUrl){
+    url = apiNextUrl;
+  } else {
+    const search = document.getElementById('creatureSearch').value.trim();
+    const crMin = document.getElementById('crMin').value;
+    const crMax = document.getElementById('crMax').value;
+
+    // Build type filter from active filter tab
+    let typeParam = '';
+    if(activeFilter !== 'all'){
+      typeParam = activeFilter;
+    }
+
+    url = 'https://api.open5e.com/v1/monsters/?format=json&limit=40';
+    if(search) url += '&search=' + encodeURIComponent(search);
+    if(typeParam) url += '&type=' + encodeURIComponent(typeParam);
+    if(crMin) url += '&cr__gte=' + crMin;
+    if(crMax) url += '&cr__lte=' + crMax;
+    url += '&ordering=challenge_rating';
+  }
+
+  try {
+    const res = await fetch(url, {signal: apiAbortController.signal});
+    const data = await res.json();
+
+    const indicator = document.getElementById('apiLoadingIndicator');
+    if(indicator) indicator.remove();
+
+    apiNextUrl = data.next;
+    apiLoading = false;
+
+    if(!append){
+      document.getElementById('resultCount').textContent = `${data.count} creature trovate via Open5e`;
+    }
+
+    if(data.results.length === 0 && !append){
+      list.innerHTML = '<div style="text-align:center;padding:1.5rem;opacity:.5;font-size:.8rem;">Nessuna creatura trovata nei tomi.</div>';
+      return;
+    }
+
+    data.results.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'creature-item external';
+      const sizeIta = SIZE_MAP[c.size] || c.size;
+      const typeIta = TYPE_MAP_ITA[c.type?.toLowerCase()] || c.type;
+      const doc = c.document__title ? c.document__title.replace('Systems Reference Document','SRD') : 'Open5e';
+
+      div.innerHTML = `
+        <div class="creature-avatar">${getTypeSVG(c.type)}</div>
+        <div class="creature-info">
+          <div class="creature-name">${c.name}</div>
+          <div class="creature-meta">${sizeIta} ${typeIta} - ${doc}</div>
+        </div>
+        <div class="cr-badge" style="background:var(--api-blue);border-color:var(--api-blue-border);color:var(--api-blue-text);">CR ${c.cr ?? c.challenge_rating ?? '?'}</div>`;
+
+      div.onclick = () => loadApiCreature(c);
+      list.appendChild(div);
+    });
+
+    // Add "Load More" button if there's a next page
+    if(apiNextUrl){
+      const wrap = document.createElement('div');
+      wrap.className = 'load-more-wrap';
+      wrap.innerHTML = '<button class="load-more-btn" onclick="fetchApiMonsters(true)">Carica altre creature...</button>';
+      list.appendChild(wrap);
+    }
+  } catch(e){
+    if(e.name === 'AbortError') return;
+    const indicator = document.getElementById('apiLoadingIndicator');
+    if(indicator) indicator.remove();
+    apiLoading = false;
+    list.insertAdjacentHTML('beforeend','<div style="text-align:center;padding:1rem;color:#ff6666;font-size:.75rem;">Errore di connessione API. Riprova.</div>');
+  }
+}
+
+// =====================================================
+// LOAD API CREATURE (full data mapping)
+// =====================================================
+function loadApiCreature(c){
+  loadedApiCreature = c;
+  selectedCreature = {id: c.slug || c.name, name: c.name, type: c.type?.toLowerCase() || 'humanoid'};
+
+  document.getElementById('enemyName').value = c.name;
+  document.getElementById('statHP').value = c.hit_points || 0;
+  document.getElementById('statAC').value = c.armor_class || 10;
+
+  // Speed
+  let spd = 9;
+  if(c.speed){
+    if(typeof c.speed === 'object' && c.speed.walk){
+      const walkStr = String(c.speed.walk);
+      const ftMatch = walkStr.match(/(\d+)/);
+      if(ftMatch) spd = Math.round(parseInt(ftMatch[1]) * 0.3);
+    } else if(typeof c.speed === 'string'){
+      const ftMatch = c.speed.match(/(\d+)/);
+      if(ftMatch) spd = Math.round(parseInt(ftMatch[1]) * 0.3);
+    }
+  }
+  document.getElementById('statSpeed').value = spd;
+
+  // Ability scores
+  document.getElementById('ab-str').value = c.strength || 10;
+  document.getElementById('ab-dex').value = c.dexterity || 10;
+  document.getElementById('ab-con').value = c.constitution || 10;
+  document.getElementById('ab-int').value = c.intelligence || 10;
+  document.getElementById('ab-wis').value = c.wisdom || 10;
+  document.getElementById('ab-cha').value = c.charisma || 10;
+
+  // Dropdowns
+  const sizeIta = SIZE_MAP[c.size] || 'Media';
+  try { document.getElementById('selSize').value = sizeIta; } catch(e){}
+
+  const cr = c.cr ?? c.challenge_rating ?? '5';
+  try { document.getElementById('selCR').value = String(cr); } catch(e){}
+
+  const typeIta = TYPE_MAP_ITA[c.type?.toLowerCase()] || '';
+  try { document.getElementById('selType').value = typeIta; } catch(e){}
+
+  // Alignment
+  if(c.alignment){
+    const alignMap = {
+      'lawful good':'Legale Buono','neutral good':'Neutrale Buono','chaotic good':'Caotico Buono',
+      'lawful neutral':'Legale Neutrale','neutral':'Neutrale','chaotic neutral':'Caotico Neutrale',
+      'lawful evil':'Legale Malvagio','neutral evil':'Neutrale Malvagio','chaotic evil':'Caotico Malvagio',
+      'unaligned':'Senza Allineamento','any alignment':'Neutrale'
+    };
+    const al = alignMap[c.alignment?.toLowerCase()] || 'Neutrale';
+    try { document.getElementById('selAlign').value = al; } catch(e){}
+  }
+
+  // Build traits section from API data
+  renderApiTraits(c);
+
+  // Build DM Notes with full details
+  let notes = [];
+
+  // Senses
+  if(c.senses) notes.push('SENSI: ' + c.senses);
+  // Languages
+  if(c.languages) notes.push('LINGUE: ' + c.languages);
+  // Saving throws
+  if(c.strength_save || c.dexterity_save || c.constitution_save || c.intelligence_save || c.wisdom_save || c.charisma_save){
+    const saves = [];
+    if(c.strength_save) saves.push('FOR +' + c.strength_save);
+    if(c.dexterity_save) saves.push('DES +' + c.dexterity_save);
+    if(c.constitution_save) saves.push('COS +' + c.constitution_save);
+    if(c.intelligence_save) saves.push('INT +' + c.intelligence_save);
+    if(c.wisdom_save) saves.push('SAG +' + c.wisdom_save);
+    if(c.charisma_save) saves.push('CAR +' + c.charisma_save);
+    notes.push('TIRI SALVEZZA: ' + saves.join(', '));
+  }
+  // Skills
+  const skills = [];
+  const skillKeys = ['acrobatics','animal_handling','arcana','athletics','deception','history','insight','intimidation','investigation','medicine','nature','perception','performance','persuasion','religion','sleight_of_hand','stealth','survival'];
+  skillKeys.forEach(sk => { if(c[sk]) skills.push(sk.replace(/_/g,' ') + ' +' + c[sk]); });
+  if(skills.length) notes.push('ABILITA: ' + skills.join(', '));
+
+  // Damage vulnerabilities/resistances/immunities
+  if(c.damage_vulnerabilities) notes.push('VULNERABILITA AI DANNI: ' + c.damage_vulnerabilities);
+  if(c.damage_resistances) notes.push('RESISTENZE AI DANNI: ' + c.damage_resistances);
+  if(c.damage_immunities) notes.push('IMMUNITA AI DANNI: ' + c.damage_immunities);
+  if(c.condition_immunities) notes.push('IMMUNITA CONDIZIONI: ' + c.condition_immunities);
+
+  document.getElementById('dmNotes').value = notes.join('\n');
+
+  autoPrompt();
+  updatePreview();
+}
+
+function renderApiTraits(c){
+  const area = document.getElementById('traitsArea');
+  let html = '';
+
+  if(c.special_abilities && c.special_abilities.length){
+    c.special_abilities.forEach(a => {
+      html += `<div class="trait-item"><div class="trait-name">${a.name}</div><div class="trait-desc">${a.desc}</div></div>`;
+    });
+  }
+  if(c.actions && c.actions.length){
+    html += '<div style="font-family:Cinzel,serif;font-size:.62rem;letter-spacing:.15em;color:var(--gold);opacity:.5;margin:.5rem 0 .3rem;text-transform:uppercase;">Azioni</div>';
+    c.actions.forEach(a => {
+      html += `<div class="trait-item"><div class="trait-name">${a.name}</div><div class="trait-desc">${a.desc}</div></div>`;
+    });
+  }
+  if(c.bonus_actions && c.bonus_actions.length){
+    html += '<div style="font-family:Cinzel,serif;font-size:.62rem;letter-spacing:.15em;color:var(--gold);opacity:.5;margin:.5rem 0 .3rem;text-transform:uppercase;">Azioni Bonus</div>';
+    c.bonus_actions.forEach(a => {
+      html += `<div class="trait-item"><div class="trait-name">${a.name}</div><div class="trait-desc">${a.desc}</div></div>`;
+    });
+  }
+  if(c.reactions && c.reactions.length){
+    html += '<div style="font-family:Cinzel,serif;font-size:.62rem;letter-spacing:.15em;color:var(--gold);opacity:.5;margin:.5rem 0 .3rem;text-transform:uppercase;">Reazioni</div>';
+    c.reactions.forEach(a => {
+      html += `<div class="trait-item"><div class="trait-name">${a.name}</div><div class="trait-desc">${a.desc}</div></div>`;
+    });
+  }
+  if(c.legendary_actions && c.legendary_actions.length){
+    html += '<div style="font-family:Cinzel,serif;font-size:.62rem;letter-spacing:.15em;color:var(--ember);opacity:.7;margin:.5rem 0 .3rem;text-transform:uppercase;">Azioni Leggendarie</div>';
+    if(c.legendary_desc) html += `<div class="trait-item"><div class="trait-desc" style="font-style:italic;">${c.legendary_desc}</div></div>`;
+    c.legendary_actions.forEach(a => {
+      html += `<div class="trait-item"><div class="trait-name">${a.name}</div><div class="trait-desc">${a.desc}</div></div>`;
+    });
+  }
+
+  area.innerHTML = html || '<div style="opacity:.3;font-size:.7rem;text-align:center;">Nessun tratto speciale.</div>';
+}
+
+// =====================================================
+// LOAD LOCAL CREATURE
+// =====================================================
+function loadCreature(c){
+  selectedCreature = c;
+  loadedApiCreature = null;
+  document.getElementById('enemyName').value = c.name;
+  document.getElementById('selSize').value = c.size;
+  document.getElementById('selAlign').value = c.align;
+  document.getElementById('selCR').value = c.cr;
+  document.getElementById('statHP').value = c.hp;
+  document.getElementById('statAC').value = c.ac;
+  document.getElementById('statSpeed').value = c.spd;
+  ['str','dex','con','int','wis','cha'].forEach(ab => document.getElementById(`ab-${ab}`).value = c[ab]);
+
+  // Reset notes for local creatures
+  document.getElementById('dmNotes').value = '';
+
+  if(currentSource === 'local'){
+    renderCreatureList(activeFilter, document.getElementById('creatureSearch').value);
+  }
+  renderLocalTraits(c);
+  autoPrompt();
+  updatePreview();
+}
+
+// =====================================================
+// TRAITS (Local DB)
+// =====================================================
+const TRAIT_MAP = {
+  beast:       [{n:'Morso',d:'Attacco in mischia: +FOR al colpire. Danno: dado+FOR perforante.'}],
+  undead:      [{n:'Resistenza ai Danni',d:'Resistente a perforante, tagliente, contundente di armi non magiche.'},{n:'Senso dei Nonmorti',d:'Percezione del buio 18m.'}],
+  dragon:      [{n:'Soffio (Ricarica 5-6)',d:'Cono o linea di energia. TS DES/COS CD fissa.'}],
+  fiend:       [{n:'Resistenza Magica',d:'Vantaggio ai TS contro magie e altri effetti magici.'}],
+  humanoid:    [{n:'Attacco Molteplice',d:'Effettua due attacchi per azione.'}],
+  aberration:  [{n:'Resistenza Psichica',d:'Vantaggio ai TS contro incantesimi e effetti che influenzano la mente.'}],
+  monstrosity: [{n:'Attacco Multiplo',d:'Puo effettuare piu attacchi in base alla natura della creatura.'}],
+  construct:   [{n:'Immunita alla Magia',d:'Immune agli incantesimi e effetti magici a meno che non siano specificati.'}],
+  elemental:   [{n:'Forma Elementale',d:'Puo attraversare spazi stretti 2.5cm senza stringersi. Immune a prono.'}],
+  fey:         [{n:'Resistenza Magica',d:'Vantaggio ai TS contro magie e altri effetti magici.'}],
+  giant:       [{n:'Roccia',d:'Attacco a distanza: lancio roccia. Gittata 18/72m. Danno contundente.'}],
+  celestial:   [{n:'Resistenza Magica',d:'Vantaggio ai TS contro magie. Armi magiche.'}],
+  ooze:        [{n:'Corpo Amorfo',d:'Puo muoversi attraverso spazi larghi 2.5cm senza stringersi.'}],
+  plant:       [{n:'Falso Aspetto',d:'Mentre resta immobile, sembra una pianta normale.'}],
+};
+
+function renderLocalTraits(c){
+  const area = document.getElementById('traitsArea');
+  const traits = TRAIT_MAP[c.type] || TRAIT_MAP.humanoid;
+  area.innerHTML = traits.map(t => `
+    <div class="trait-item">
+      <div class="trait-name">${t.n}</div>
+      <div class="trait-desc">${t.d}</div>
+    </div>`).join('');
+}
+
+// =====================================================
+// AUTO PROMPT BUILDER
+// =====================================================
+function autoPrompt(){
+  const name = document.getElementById('enemyName').value || 'Creature';
+  const type = document.getElementById('selType').value;
+  const race = document.getElementById('selRace').value;
+  const build = document.getElementById('selBuild').value;
+  const gender = document.getElementById('selGender').value;
+
+  let parts = [name];
+  if(race) parts.push(race);
+  if(type) parts.push(type);
+  if(build && build !== 'Media') parts.push(build + ' build');
+  if(gender && gender !== 'Nessuno') parts.push(gender === 'Maschile' ? 'male' : gender === 'Femminile' ? 'female' : '');
+
+  const styleStr = [...activeStyles].map(s => STYLE_CHIPS.find(c => c.label === s)?.val || '').filter(Boolean).join(', ');
+  if(styleStr) parts.push(styleStr);
+  else parts.push('fantasy concept art, highly detailed');
+
+  document.getElementById('aiPrompt').value = parts.filter(Boolean).join(', ');
+}
+
+// =====================================================
+// AI IMAGE GENERATION — Pollinations.ai
+// =====================================================
+// Salva/leggi chiave Gemini
+function saveGeminiKey(){
+  const v = document.getElementById('geminiKeyInput').value;
+  try { localStorage.setItem('grimorio_gemini_key', v); } catch(e){}
+}
+function loadGeminiKey(){
+  const DEFAULT_KEY = 'AIzaSyDTentmgpw8b03mgyEbMJTh1yLUFZZ9fBg';
+  try { return localStorage.getItem('grimorio_gemini_key') || DEFAULT_KEY; } catch(e){ return DEFAULT_KEY; }
+}
+function toggleGeminiKeyVisibility(){
+  const inp = document.getElementById('geminiKeyInput');
+  inp.type = (inp.type === 'password') ? 'text' : 'password';
+}
+
+// Converti base64 in blob e mostra immagine
+function showBase64Image(base64, mimeType, img, ph, btn, spinner, loading, labelOk){
+  function resetState(){ btn.disabled=false; spinner.style.display='none'; loading.style.display='none'; }
+  const byteChars = atob(base64);
+  const bytes = new Uint8Array(byteChars.length);
+  for(let i=0;i<byteChars.length;i++) bytes[i] = byteChars.charCodeAt(i);
+  const blob = new Blob([bytes], { type: mimeType || 'image/jpeg' });
+  const objUrl = URL.createObjectURL(blob);
+  img.onload = function(){
+    resetState();
+    img.style.display = 'block'; ph.style.display = 'none';
+    portraitSrc = objUrl;
+    imageHistory.push(objUrl);
+    if(imageHistory.length > 8) imageHistory.shift();
+    renderImageHistory(); updatePreview();
+    setGenStatus(labelOk || 'Immagine generata!', '#88ff88');
+    setTimeout(function(){ setGenStatus('',''); }, 4000);
+  };
+  img.onerror = function(){ resetState(); setGenStatus('Errore nel rendering immagine.', '#ff8888'); };
+  img.src = objUrl;
+}
+
+// Generazione con Google Gemini (Flash o Imagen 3)
+async function generateImageGemini(prompt, apiKey, model, btn, spinner, loading, img, ph){
+  function resetState(){ btn.disabled=false; spinner.style.display='none'; loading.style.display='none'; }
+  const controller = new AbortController();
+  const tid = setTimeout(() => controller.abort(), 120000);
+
+  try {
+    if(model === 'imagen-3'){
+      // ---- IMAGEN 3 (Google Pro) ----
+      setGenStatus('Connessione a Imagen 3...', '#88aaff');
+      const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=' + encodeURIComponent(apiKey);
+      const body = JSON.stringify({
+        instances: [{ prompt: prompt }],
+        parameters: { sampleCount: 1, aspectRatio: '3:4' }
+      });
+      setGenStatus('Imagen 3 in generazione... (20-40 sec)', '#88aaff');
+      const resp = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: body, signal: controller.signal
+      });
+      clearTimeout(tid);
+      if(!resp.ok){
+        const txt = await resp.text().catch(() => '');
+        if(resp.status === 404){
+          // Fallback automatico a Gemini Flash
+          setGenStatus('Imagen 3 non disponibile su questo piano — provo Gemini Flash...', '#ffaa44');
+          return generateImageGemini(prompt, apiKey, 'gemini-flash', btn, spinner, loading, img, ph);
+        }
+        if(resp.status === 403) throw new Error('Chiave non autorizzata per Imagen 3. Seleziona "Gemini Flash".');
+        if(resp.status === 429) throw new Error('Rate limit Imagen 3. Aspetta un minuto e riprova.');
+        throw new Error('Imagen 3 HTTP ' + resp.status + (txt ? ': ' + txt.substring(0,100) : ''));
+      }
+      const data = await resp.json();
+      const pred = data?.predictions?.[0];
+      const imgData = pred?.bytesBase64Encoded;
+      const mimeType = pred?.mimeType || 'image/jpeg';
+      if(!imgData) throw new Error('Imagen 3 non ha restituito immagini. Riprova o controlla la chiave.');
+      showBase64Image(imgData, mimeType, img, ph, btn, spinner, loading, 'Imagen 3: immagine generata!');
+
+    } else {
+      // ---- GEMINI generateContent con fallback automatico tra modelli ----
+      // Sequenza: gemini-3.1-flash-image-preview → gemini-2.5-flash-image → gemini-2.0-flash-exp
+      const GEMINI_FALLBACKS = [
+        { id: 'gemini-3.1-flash-image-preview', label: 'NanaBanana 2 (3.1)' },
+        { id: 'gemini-2.5-flash-image',          label: 'NanaBanana (2.5)' },
+        { id: 'gemini-2.0-flash-exp',             label: 'Gemini 2.0 Flash Exp' },
+      ];
+      const startIdx = (model === 'gemini-25') ? 1 : 0;
+      let lastErr = null;
+      for(let i = startIdx; i < GEMINI_FALLBACKS.length; i++){
+        const { id: modelId, label: modelLabel } = GEMINI_FALLBACKS[i];
+        setGenStatus('Provo ' + modelLabel + '...', '#88aaff');
+        try {
+          const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' + modelId + ':generateContent?key=' + encodeURIComponent(apiKey);
+          const resp = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents:[{parts:[{text:prompt}]}], generationConfig:{responseModalities:['IMAGE']} }),
+            signal: controller.signal
+          });
+          clearTimeout(tid);
+          if(!resp.ok){
+            const txt = await resp.text().catch(()=>'');
+            if(resp.status === 429 || resp.status === 404){
+              // Prova il prossimo modello della lista
+              lastErr = modelLabel + ' → ' + resp.status;
+              setGenStatus('Provo modello successivo...', '#ffaa44');
+              continue;
+            }
+            if(resp.status === 403) throw new Error('API Key non valida o scaduta.');
+            if(resp.status === 400) throw new Error('Prompt non valido. Prova in inglese.');
+            throw new Error('HTTP ' + resp.status + (txt ? ': ' + txt.substring(0,80) : ''));
+          }
+          const data = await resp.json();
+          let imgData = null, mimeType = 'image/jpeg';
+          const parts = data?.candidates?.[0]?.content?.parts || [];
+          for(const part of parts){
+            if(part.inlineData?.data){ imgData=part.inlineData.data; mimeType=part.inlineData.mimeType||'image/jpeg'; break; }
+          }
+          if(!imgData){ lastErr = 'Nessuna immagine da ' + modelLabel; continue; }
+          showBase64Image(imgData, mimeType, img, ph, btn, spinner, loading, modelLabel + ': immagine generata!');
+          return; // successo!
+        } catch(innerErr){
+          if(innerErr.name === 'AbortError') throw innerErr;
+          if(innerErr.message && (innerErr.message.includes('API Key') || innerErr.message.includes('Prompt'))) throw innerErr;
+          lastErr = innerErr.message;
+        }
+      }
+      // Tutti i modelli Gemini falliti
+      throw new Error('Tutti i modelli Google hanno fallito (' + lastErr + '). Bug noto Google post-billing: attendi 24-48h. Nel frattempo, usa il pulsante Ricarica e riprova tra qualche ora.');
+    }
+
+  } catch(err){
+    clearTimeout(tid);
+    resetState();
+    if(err.name === 'AbortError'){
+      setGenStatus('Timeout (120s). Server lento, riprova.', '#ff8888');
+    } else {
+      setGenStatus(err.message || 'Errore sconosciuto', '#ff8888');
+    }
+  }
+}
+
+async function generateImage(){
+  const prompt = document.getElementById('aiPrompt').value.trim();
+  if(!prompt){ alert("Scrivi prima un prompt nella casella di testo!"); return; }
+
+  const btn     = document.getElementById('genBtn');
+  const spinner = document.getElementById('genSpinner');
+  const loading = document.getElementById('aiLoading');
+  const img     = document.getElementById('aiPortrait');
+  const ph      = document.getElementById('aiPlaceholder');
+
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  loading.style.display = 'flex';
+
+  // Percorso Google (tutti i modelli Google)
+  if(['gemini-flash','gemini-25','imagen-3','imagen-4-fast'].includes(activeModel)){
+    const apiKey = document.getElementById('geminiKeyInput').value.trim() || loadGeminiKey();
+    if(!apiKey){
+      btn.disabled = false; spinner.style.display = 'none'; loading.style.display = 'none';
+      setGenStatus('Inserisci la tua Google API Key per usare questo modello.', '#ffaa44');
+      document.getElementById('geminiKeyInput').focus();
+      return;
+    }
+    try { localStorage.setItem('grimorio_gemini_key', apiKey); } catch(e){}
+    document.getElementById('geminiKeyInput').value = apiKey;
+    return generateImageGemini(prompt, apiKey, activeModel, btn, spinner, loading, img, ph);
+  }
+
+  const seed = Math.floor(Math.random() * 999999) + 1;
+  const encPrompt = encodeURIComponent(prompt);
+
+  // Tre URL Pollinations da provare in sequenza (endpoint cambiati nel 2025-2026)
+  const POLL_URLS = [
+    'https://gen.pollinations.ai/image/' + encPrompt + '?width=512&height=640&seed=' + seed + '&nologo=true',
+    'https://pollinations.ai/p/' + encPrompt + '?width=512&height=640&seed=' + seed + '&nologo=true',
+    'https://image.pollinations.ai/prompt/' + encPrompt + '?width=512&height=640&seed=' + seed + '&nologo=true&model=flux',
+  ];
+
+  function resetState(){
+    btn.disabled = false;
+    spinner.style.display = 'none';
+    loading.style.display = 'none';
+  }
+
+  function showPollinationsImage(objUrl){
+    img.onload = function(){
+      resetState();
+      img.style.display = 'block'; ph.style.display = 'none';
+      portraitSrc = objUrl;
+      imageHistory.push(objUrl);
+      if(imageHistory.length > 8) imageHistory.shift();
+      renderImageHistory(); updatePreview();
+      setGenStatus('Immagine generata!', '#88ff88');
+      setTimeout(function(){ setGenStatus('',''); }, 4000);
+    };
+    img.onerror = function(){ resetState(); setGenStatus('Errore nel rendering immagine.', '#ff8888'); };
+    img.src = objUrl;
+  }
+
+  // Prova ogni URL finché uno funziona
+  async function tryPollinationsUrls(urls, idx){
+    if(idx >= urls.length){
+      resetState();
+      setGenStatus('Tutti gli endpoint Pollinations non rispondo (404). Servizio temporaneamente offline.', '#ff8888');
+      return;
+    }
+    const url = urls[idx];
+    const label = idx === 0 ? 'gen.pollinations.ai' : idx === 1 ? 'pollinations.ai/p/' : 'image.pollinations.ai';
+    setGenStatus('Provo ' + label + '... (' + (idx+1) + '/3)', '#c9a84c');
+    try {
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), 45000);
+      const resp = await fetch(url, { signal: controller.signal, headers:{ 'Accept':'image/*,*/*' } });
+      clearTimeout(tid);
+      if(!resp.ok){
+        // prova il prossimo
+        return tryPollinationsUrls(urls, idx + 1);
+      }
+      const blob = await resp.blob();
+      if(!blob.type.startsWith('image/')){
+        return tryPollinationsUrls(urls, idx + 1);
+      }
+      showPollinationsImage(URL.createObjectURL(blob));
+    } catch(e){
+      if(e.name === 'AbortError'){
+        resetState();
+        setGenStatus('Timeout su tutti gli endpoint Pollinations.', '#ff8888');
+        return;
+      }
+      // rete — prova il prossimo
+      return tryPollinationsUrls(urls, idx + 1);
+    }
+  }
+
+  tryPollinationsUrls(POLL_URLS, 0);
+}
+
+// Fallback: usa img.src diretto (senza fetch) — utile se CORS blocca fetch ma non img
+function tryDirectImgSrc(url, img, ph, btn, spinner, loading){
+  let done = false;
+  const tid = setTimeout(function(){
+    if(done) return; done = true;
+    btn.disabled = false; spinner.style.display = 'none'; loading.style.display = 'none';
+    setGenStatus('Anche il metodo diretto e fallito. Prova un modello diverso o riprova tra poco.', '#ff6666');
+    document.getElementById('imgOpenLink').href = url;
+    document.getElementById('imgOpenLink').style.display = 'inline';
+  }, 45000);
+
+  img.onload = function(){
+    if(done) return; done = true;
+    clearTimeout(tid);
+    btn.disabled = false; spinner.style.display = 'none'; loading.style.display = 'none';
+    img.style.display = 'block'; ph.style.display = 'none';
+    portraitSrc = img.src;
+    imageHistory.push(img.src);
+    if(imageHistory.length > 8) imageHistory.shift();
+    renderImageHistory(); updatePreview();
+    setGenStatus('Immagine generata!', '#88ff88');
+    setTimeout(function(){ setGenStatus('',''); }, 3000);
+  };
+  img.onerror = function(){
+    if(done) return; done = true;
+    clearTimeout(tid);
+    btn.disabled = false; spinner.style.display = 'none'; loading.style.display = 'none';
+    setGenStatus('Fallito anche il metodo diretto. Apri il link qui sotto per vedere/salvare l\'immagine.', '#ff8888');
+    document.getElementById('imgOpenLink').href = url;
+    document.getElementById('imgOpenLink').style.display = 'inline';
+  };
+  img.src = url;
+}
+
+// Messaggio di stato testuale
+function setGenStatus(msg, color){
+  var el = document.getElementById('genStatus');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'genStatus';
+    el.style.cssText = 'font-family:"Cinzel",serif;font-size:.62rem;letter-spacing:.08em;padding:.35rem .2rem;text-align:center;min-height:1.4rem;transition:color .3s;';
+    var imgHistory = document.getElementById('imgHistory');
+    if(imgHistory && imgHistory.parentNode) imgHistory.parentNode.insertBefore(el, imgHistory);
+  }
+  el.textContent = msg;
+  el.style.color = color || 'transparent';
+}
+
+function renderImageHistory(){
+  const el = document.getElementById('imgHistory');
+  el.innerHTML = '';
+  imageHistory.forEach((src,i) => {
+    const img = document.createElement('img');
+    img.className = 'img-history-thumb' + (src === portraitSrc ? ' active' : '');
+    img.src = src;
+    img.title = `Immagine ${i+1}`;
+    img.onclick = () => {
+      portraitSrc = src;
+      const mainImg = document.getElementById('aiPortrait');
+      const ph = document.getElementById('aiPlaceholder');
+      mainImg.src = src;
+      mainImg.style.display = 'block';
+      ph.style.display = 'none';
+      renderImageHistory();
+      updatePreview();
+    };
+    el.appendChild(img);
+  });
+}
+
+function uploadImage(){ document.getElementById('imgUpload').click(); }
+function handleUpload(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = document.getElementById('aiPortrait');
+    const ph = document.getElementById('aiPlaceholder');
+    img.src = ev.target.result; img.style.display = 'block'; ph.style.display = 'none';
+    portraitSrc = ev.target.result;
+    imageHistory.push(portraitSrc);
+    renderImageHistory();
+    updatePreview();
+  };
+  reader.readAsDataURL(file);
+}
+function clearPortrait(){
+  const img = document.getElementById('aiPortrait');
+  const ph = document.getElementById('aiPlaceholder');
+  img.style.display = 'none'; ph.style.display = 'flex';
+  portraitSrc = '';
+  updatePreview();
+}
+function downloadPortrait(){
+  if(!portraitSrc){ alert('Nessuna immagine da salvare!'); return; }
+  const a = document.createElement('a');
+  a.href = portraitSrc;
+  a.download = (document.getElementById('enemyName').value || 'creatura') + '_portrait.png';
+  a.click();
+}
+
+// =====================================================
+// STAT BLOCK PREVIEW
+// =====================================================
+function getMod(v){ const m = Math.floor((parseInt(v)-10)/2); return (m >= 0 ? '+' : '') + m; }
+function updateAbilityMods(){
+  ['str','dex','con','int','wis','cha'].forEach(ab => {
+    const v = document.getElementById(`ab-${ab}`).value;
+    document.getElementById(`mod-${ab}`).textContent = getMod(v);
+  });
+}
+
+function updatePreview(){
+  updateAbilityMods();
+  const name = document.getElementById('enemyName').value || '???';
+  const type = document.getElementById('selType').value;
+  const race = document.getElementById('selRace').value;
+  const cls = document.getElementById('selClass').value;
+  const size = document.getElementById('selSize').value;
+  const align = document.getElementById('selAlign').value;
+  const cr = document.getElementById('selCR').value;
+  const hp = document.getElementById('statHP').value;
+  const ac = document.getElementById('statAC').value;
+  const spd = document.getElementById('statSpeed').value;
+  const str = document.getElementById('ab-str').value;
+  const dex = document.getElementById('ab-dex').value;
+  const con = document.getElementById('ab-con').value;
+  const int_ = document.getElementById('ab-int').value;
+  const wis = document.getElementById('ab-wis').value;
+  const cha = document.getElementById('ab-cha').value;
+  const resist = [...activeResist].join(', ') || '--';
+  const condImm = [...activeCondImm].join(', ') || '--';
+  const notes = document.getElementById('dmNotes').value.replace(/\n/g,'<br>');
+  const typeStr = [size, type || 'Creatura', race, cls].filter(Boolean).join(' ');
+  const thumb = portraitSrc ? `<img class="sb-portrait-thumb" src="${portraitSrc}" alt="">` : '';
+
+  // Build traits HTML with sections
+  let traitsHTML = '';
+  const traitItems = document.querySelectorAll('#traitsArea .trait-item');
+  const traitSections = document.querySelectorAll('#traitsArea > div[style]');
+
+  // Simple approach: gather all traits area innerHTML for stat block
+  const traitsRaw = document.getElementById('traitsArea').innerHTML;
+  // Convert trait items to stat block format
+  const traitElements = document.querySelectorAll('#traitsArea .trait-item');
+  traitElements.forEach(t => {
+    const nameEl = t.querySelector('.trait-name');
+    const descEl = t.querySelector('.trait-desc');
+    if(nameEl && descEl){
+      traitsHTML += `<div class="sb-trait"><b>${nameEl.textContent}.</b> ${descEl.textContent}</div>`;
+    }
+  });
+
+  // Check for section headers in traits area
+  const sectionHeaders = document.querySelectorAll('#traitsArea > div[style*="text-transform"]');
+  if(sectionHeaders.length){
+    // Rebuild with sections
+    traitsHTML = '';
+    let currentSection = '';
+    const allChildren = document.getElementById('traitsArea').children;
+    for(let child of allChildren){
+      if(child.style && child.style.textTransform === 'uppercase'){
+        currentSection = child.textContent;
+        traitsHTML += `<div class="sb-section-title">${currentSection}</div>`;
+      } else if(child.classList.contains('trait-item')){
+        const nameEl = child.querySelector('.trait-name');
+        const descEl = child.querySelector('.trait-desc');
+        if(nameEl && descEl){
+          traitsHTML += `<div class="sb-trait"><b>${nameEl.textContent}.</b> ${descEl.textContent}</div>`;
+        } else if(descEl){
+          traitsHTML += `<div class="sb-trait" style="font-style:italic;">${descEl.textContent}</div>`;
+        }
+      }
+    }
+  }
+
+  const notesHTML = notes ? `<div class="sb-divider thin"></div><div class="sb-row" style="font-size:.72rem;line-height:1.5;">${notes}</div>` : '';
+
+  // Hit dice estimation
+  const hdMap = {Minuscola:'d4',Piccola:'d6',Media:'d8',Grande:'d10',Enorme:'d12',Mastodontica:'d20'};
+  const hd = hdMap[size] || 'd8';
+
+  document.getElementById('statBlock').innerHTML = `
+    <div class="sb-header"><div class="sb-name">${name}</div><div class="sb-type"><em>${typeStr || 'Creatura media'}, ${align.toLowerCase()}</em></div></div>
+    <div class="sb-body">
+      ${thumb}
+      <div class="sb-row"><b>Classe Armatura</b> ${ac}</div>
+      <div class="sb-row"><b>Punti Ferita</b> ${hp} <span style="font-size:.7rem;opacity:.5;">(${hd})</span></div>
+      <div class="sb-row"><b>Velocita</b> ${spd} m.</div>
+      <div class="sb-divider"></div>
+      <div class="sb-abilities">
+        <div class="sb-ab"><div class="sb-ab-name">FOR</div><div class="sb-ab-val">${str}</div><div class="sb-ab-mod">(${getMod(str)})</div></div>
+        <div class="sb-ab"><div class="sb-ab-name">DES</div><div class="sb-ab-val">${dex}</div><div class="sb-ab-mod">(${getMod(dex)})</div></div>
+        <div class="sb-ab"><div class="sb-ab-name">COS</div><div class="sb-ab-val">${con}</div><div class="sb-ab-mod">(${getMod(con)})</div></div>
+        <div class="sb-ab"><div class="sb-ab-name">INT</div><div class="sb-ab-val">${int_}</div><div class="sb-ab-mod">(${getMod(int_)})</div></div>
+        <div class="sb-ab"><div class="sb-ab-name">SAG</div><div class="sb-ab-val">${wis}</div><div class="sb-ab-mod">(${getMod(wis)})</div></div>
+        <div class="sb-ab"><div class="sb-ab-name">CAR</div><div class="sb-ab-val">${cha}</div><div class="sb-ab-mod">(${getMod(cha)})</div></div>
+      </div>
+      <div class="sb-divider"></div>
+      <div class="sb-row"><b>Resistenze</b> ${resist}</div>
+      <div class="sb-row"><b>Immunita Condizioni</b> ${condImm}</div>
+      <div class="sb-row"><b>Grado di Sfida</b> ${cr}</div>
+      <div class="sb-divider"></div>
+      ${traitsHTML}
+      ${notesHTML}
+    </div>`;
+}
+
+// =====================================================
+// REVEAL
+// =====================================================
+function revealEnemy(){
+  const name = document.getElementById('enemyName').value || '???';
+  document.getElementById('revealName').textContent = name;
+  const portEl = document.getElementById('revealPortrait');
+  if(portraitSrc){
+    portEl.innerHTML = `<img class="reveal-portrait" src="${portraitSrc}" alt="${name}">`;
+  } else {
+    const type = selectedCreature?.type || 'humanoid';
+    const svg = getTypeSVG(type);
+    portEl.innerHTML = `<div class="reveal-portrait-placeholder">${svg.replace(/viewBox="0 0 36 36"/,'viewBox="0 0 36 36" width="200" height="200"')}</div>`;
+  }
+  document.getElementById('revealStatBlock').innerHTML = document.getElementById('statBlock').innerHTML;
+  const ov = document.getElementById('revealOverlay');
+  ov.classList.remove('active');
+  requestAnimationFrame(() => ov.classList.add('active'));
+}
+function closeReveal(){ document.getElementById('revealOverlay').classList.remove('active'); }
+
+// =====================================================
+// EXPORT: build hidden card for html2canvas capture
+// =====================================================
+function buildExportCard(){
+  const name = document.getElementById('enemyName').value || 'Creatura';
+  const card = document.getElementById('exportCard');
+  // Portrait
+  let portHtml = '';
+  if(portraitSrc){
+    portHtml = `<img src="${portraitSrc}" style="width:220px;height:290px;object-fit:cover;object-position:top center;border:3px solid #c9a84c;border-radius:4px;flex-shrink:0;">`;
+  }
+  // Stat block (clone dal panel destro)
+  const sbHtml = document.getElementById('statBlock').innerHTML;
+  card.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:.5rem;flex-shrink:0;">
+      ${portHtml ? portHtml : '<div style="width:220px;height:290px;border:3px solid #c9a84c;border-radius:4px;background:#0f0a04;display:flex;align-items:center;justify-content:center;font-size:3rem;">&#128100;</div>'}
+      <div style="font-family:\'Cinzel Decorative\',serif;font-size:1rem;color:#f0d060;text-align:center;max-width:220px;">${name}</div>
+    </div>
+    <div class="stat-block" style="width:310px;max-width:310px;font-size:.78rem;">${sbHtml}</div>`;
+  return card;
+}
+
+async function downloadRevealPNG(){
+  const btns = document.querySelectorAll('.reveal-dl-btn');
+  btns.forEach(b => b.disabled = true);
+  try {
+    const card = buildExportCard();
+    card.style.left = '-9999px';
+    await new Promise(r => setTimeout(r, 80)); // wait for fonts/images
+    const canvas = await html2canvas(card, {
+      backgroundColor: '#1e1408',
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      logging: false
+    });
+    const name = (document.getElementById('enemyName').value || 'creatura').replace(/\s+/g,'_');
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = name + '_scheda.png';
+    a.click();
+  } catch(e) {
+    alert('Errore export PNG: ' + e.message);
+  } finally {
+    btns.forEach(b => b.disabled = false);
+  }
+}
+
+async function downloadRevealPDF(){
+  const btns = document.querySelectorAll('.reveal-dl-btn');
+  btns.forEach(b => b.disabled = true);
+  try {
+    const card = buildExportCard();
+    card.style.left = '-9999px';
+    await new Promise(r => setTimeout(r, 80));
+    const canvas = await html2canvas(card, {
+      backgroundColor: '#1e1408',
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      logging: false
+    });
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    const { jsPDF } = window.jspdf;
+    // Calcola dimensioni PDF in mm (A4 portrait o adattato)
+    const pxW = canvas.width, pxH = canvas.height;
+    const ratio = pxH / pxW;
+    const pdfW = 210; // A4 width mm
+    const pdfH = Math.min(pdfW * ratio, 297); // max A4 height
+    const pdf = new jsPDF({ orientation: pdfH > pdfW ? 'portrait' : 'landscape', unit: 'mm', format: [pdfW, Math.max(pdfH, 60)] });
+    pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH > pdfW ? pdfH : pdfW * ratio);
+    const name = (document.getElementById('enemyName').value || 'creatura').replace(/\s+/g,'_');
+    pdf.save(name + '_scheda.pdf');
+  } catch(e) {
+    alert('Errore export PDF: ' + e.message);
+  } finally {
+    btns.forEach(b => b.disabled = false);
+  }
+}
+
+// =====================================================
+// EVENTS
+// =====================================================
+document.getElementById('filterTabs').addEventListener('click', e => {
+  if(!e.target.classList.contains('tab')) return;
+  document.querySelectorAll('#filterTabs .tab').forEach(t => t.classList.remove('active'));
+  e.target.classList.add('active');
+  activeFilter = e.target.dataset.f;
+  if(currentSource === 'api'){
+    fetchApiMonsters();
+  } else {
+    renderCreatureList(activeFilter, document.getElementById('creatureSearch').value);
+  }
+});
+
+document.getElementById('creatureSearch').addEventListener('input', e => {
+  if(currentSource === 'api'){
+    clearTimeout(apiSearchTimeout);
+    apiSearchTimeout = setTimeout(() => fetchApiMonsters(), 400);
+  } else {
+    renderCreatureList(activeFilter, e.target.value);
+  }
+});
+
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeReveal(); });
+document.getElementById('aiPrompt').addEventListener('keydown', e => { if(e.key === 'Enter' && e.ctrlKey) generateImage(); });
+
+init();
+</script>
+</body>
+</html>
